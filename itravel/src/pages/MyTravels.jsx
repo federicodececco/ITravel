@@ -27,14 +27,14 @@ export default function MyTravels() {
       })}
       {isDesktop && (
         <button
-          onClick={() => navigate('/add')}
+          onClick={() => navigate('/travel/add')}
           className='card card-side bg-base-100 shadow-md hover:cursor-pointer hover:bg-base-200'
         >
           <figure className='border w-full text-7xl'>+</figure>
         </button>
       )}
       <button
-        onClick={() => navigate('/add')}
+        onClick={() => navigate('/travel/add')}
         className='btn btn-circle fixed bottom-17 right-5 text-2xl bg-slate-900/70  hover:bg-slate-900'
       >
         +

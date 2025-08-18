@@ -1,27 +1,42 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.SUPABASEURL;
-const supabaseKey = import.meta.env.SUPABASEKEY;
-const imageBucket = import.meta.env.SUPABASE_BUCKET_IMAGES;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+const imageBucket =
+  import.meta.env.VITE_SUPABASE_BUCKET_IMAGES || 'travel-images';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 /* caricamento delle immagini to supabase */
-export const uploadImage = async (file, path) => {
+export const uploadImage = async (file, folder = '') => {
   try {
-    /* creazion nome dell'immagine nel db --ex: fileImage.jpg===>>> 4938274650192837_1694783256789.jpg */
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(10).substring(2)}_${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = folder ? `${folder}/${fileName}` : fileName;
+
+    console.log(
+      'Tentativo upload con bucket:',
+      imageBucket,
+      'e path:',
+      filePath,
+    );
 
     const { data, error } = await supabase.storage
       .from(imageBucket)
-      .upload(filePath, file, { upsert: false });
-    if (error) throw error;
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Errore Supabase Storage:', error);
+      throw error;
+    }
+
     const publicUrl = getPublicUrl(imageBucket, filePath);
     return { ...data, publicUrl, path: filePath };
   } catch (error) {
-    console.error('errore caricare foto', error);
+    console.error('Errore durante il caricamento della foto:', error);
     throw error;
   }
 };

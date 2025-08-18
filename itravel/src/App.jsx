@@ -7,6 +7,7 @@ import NewPage from './pages/NewPage';
 import Page from './pages/Page';
 import TravelDetail from './pages/TravelDetail';
 import TravelDetailLayout from './Layout/TravelDetailLayout';
+import NewTravel from './pages/newTravel';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route element={<DefaultLayout />}>
           <Route path='/' element={<HomePage />}></Route>
+          <Route path='/travel/add' element={<NewTravel />} />
           <Route path='/travel' element={<MyTravels />}></Route>
           <Route path='add/:travelId/new-page' element={<NewPage />}></Route>
         </Route>
