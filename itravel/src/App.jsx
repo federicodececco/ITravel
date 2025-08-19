@@ -9,11 +9,13 @@ import TravelDetail from './pages/TravelDetail';
 import TravelDetailLayout from './Layout/TravelDetailLayout';
 import NewTravel from './pages/newTravel';
 import Login from './pages/Login';
+import Register from './pages/Register';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path='/register' element={<Register />} />
         <Route path='/login' element={<Login />} />
         <Route element={<DefaultLayout />}>
           <Route path='/' element={<HomePage />}></Route>

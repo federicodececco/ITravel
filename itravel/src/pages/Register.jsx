@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useBreakpoint } from '../hooks/useScreenSize';
 
-export default function Login() {
+export default function Register() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -30,11 +29,9 @@ export default function Login() {
       <div className='w-full max-w-md bg-[#e6d3b3] rounded-2xl p-6 sm:p-8 shadow-lg'>
         <div className='text-center mb-8'>
           <h1 className='text-3xl sm:text-4xl font-bold text-gray-800 mb-2'>
-            Bentornato
+            Registrati
           </h1>
-          <p className='text-gray-600 text-lg'>
-            Accedi al tuo diario di viaggio
-          </p>
+          <p className='text-gray-600 text-lg'>Crea il tuo diario di viaggio</p>
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
@@ -77,7 +74,26 @@ export default function Login() {
               value={formData.password}
               onChange={handleChange}
               className='w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-lg'
-              placeholder='Inserisci la tua password'
+              placeholder='Inserisci una password'
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor='confirmPassword'
+              className='block text-xl font-medium text-gray-700 mb-2'
+            >
+              Conferma password
+            </label>
+            <input
+              type='password'
+              id='confirmPassword'
+              name='confirmPassword'
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className='w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-lg'
+              placeholder='Ripeti la password'
               disabled={isLoading}
             />
           </div>
@@ -94,36 +110,23 @@ export default function Login() {
             {isLoading ? (
               <div className='flex items-center justify-center'>
                 <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2'></div>
-                Accesso in corso...
+                Registrazione in corso...
               </div>
             ) : (
-              'Accedi'
+              'Registrati'
             )}
           </button>
         </form>
 
         <div className='mt-8 text-center'>
           <p className='text-gray-600'>
-            Non hai un account?{' '}
+            Hai già un account?{' '}
             <Link
-              to='/register'
+              to='/login'
               className='text-gray-800 font-semibold hover:underline'
             >
-              Registrati qui
+              Accedi qui
             </Link>
-          </p>
-        </div>
-
-        <div className='mt-6 p-4 bg-gray-100 rounded-xl'>
-          <p className='text-sm text-gray-600 text-center mb-2'>
-            <strong>Account di test:</strong>
-          </p>
-          <p className='text-sm text-gray-700 text-center'>
-            Email: <code className='bg-white px-2 py-1 rounded'>test</code>
-          </p>
-          <p className='text-sm text-gray-700 text-center'>
-            Password:{' '}
-            <code className='bg-white px-2 py-1 rounded'>password123</code>
           </p>
         </div>
       </div>
