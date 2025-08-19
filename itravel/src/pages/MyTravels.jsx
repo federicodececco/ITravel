@@ -1,19 +1,40 @@
 import { viaggi } from '../../data/places';
 import { useBreakpoint } from '../hooks/useScreenSize';
 import { useNavigate } from 'react-router';
+import { getTravels } from '../lib/supabase';
+import { useEffect, useState } from 'react';
 export default function MyTravels() {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
+  const [travels, setTravels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const loadTravels = async () => {
+    try {
+      setLoading(true);
+      const data = await getTravels();
+      setTravels(data || []);
+    } catch (err) {
+      console.error('errore caricamento viaggi', err);
+      setError('errore caricamento viaggi');
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    loadTravels();
+  }, []);
   return (
     <div className=' lg:my-20 gap-2 lg:mx-40 grid lg:grid-cols-3 lg:gap-4 relative mb-10 '>
-      {viaggi.map((elem) => {
+      {travels.map((elem) => {
         return (
           <div
             onClick={() => navigate(`/details/${elem.id}/`)}
             className='card card-side bg-base-100 shadow-lg hover:cursor-pointer hover:bg-base-200'
           >
             <figure>
-              <img src={elem.image} alt='image' />
+              <img src={elem.cover_image} alt='image' />
             </figure>
             <div className='card-body'>
               <h2 className='card-title'>{elem.title}</h2>
@@ -25,6 +46,7 @@ export default function MyTravels() {
           </div>
         );
       })}
+
       {isDesktop && (
         <button
           onClick={() => navigate('/travel/add')}

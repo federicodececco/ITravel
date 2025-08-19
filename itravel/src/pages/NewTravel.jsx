@@ -45,10 +45,7 @@ export default function NewTravel() {
     try {
       let coverImageUrl = null;
       if (coverImage) {
-        const uploadResult = await uploadImage(
-          coverImage,
-          `travels/${Date.now()}_${coverImage.name}`,
-        );
+        const uploadResult = await uploadImage(coverImage, `travels`);
         coverImageUrl = uploadResult.publicUrl;
       }
       const travelData = {

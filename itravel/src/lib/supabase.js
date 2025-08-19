@@ -14,12 +14,7 @@ export const uploadImage = async (file, folder = '') => {
     const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
     const filePath = folder ? `${folder}/${fileName}` : fileName;
 
-    console.log(
-      'Tentativo upload con bucket:',
-      imageBucket,
-      'e path:',
-      filePath,
-    );
+    console.log('Upload - Bucket:', imageBucket, 'Path:', filePath);
 
     const { data, error } = await supabase.storage
       .from(imageBucket)
@@ -33,22 +28,51 @@ export const uploadImage = async (file, folder = '') => {
       throw error;
     }
 
-    const publicUrl = getPublicUrl(imageBucket, filePath);
-    return { ...data, publicUrl, path: filePath };
+    // Genera l'URL pubblico corretto
+    const { data: urlData } = supabase.storage
+      .from(imageBucket)
+      .getPublicUrl(filePath);
+
+    console.log('URL generato:', urlData.publicUrl);
+
+    return {
+      ...data,
+      publicUrl: urlData.publicUrl,
+      path: filePath,
+    };
   } catch (error) {
     console.error('Errore durante il caricamento della foto:', error);
     throw error;
   }
 };
-/* cariacametno multiplo di immagini */
-export const uploadMultiImage = async (files, folder = '') => {
+
+export const uploadMultipleImages = async (files, folder = '') => {
   try {
-    const uploadPromises = files.map((file, index) => {
+    const uploadPromises = files.map(async (file, index) => {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(10).substring(2)}_${Date.now()}_${index}.${fileExt}`;
-      const filePath = folder ? `${folder}/${fileName}}` : fileName;
-      return uploadImage(file, bucket);
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}_${index}.${fileExt}`;
+      const filePath = folder ? `${folder}/${fileName}` : fileName;
+
+      const { data, error } = await supabase.storage
+        .from(imageBucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from(imageBucket)
+        .getPublicUrl(filePath);
+
+      return {
+        ...data,
+        publicUrl: urlData.publicUrl,
+        path: filePath,
+      };
     });
+
     const results = await Promise.all(uploadPromises);
     return results;
   } catch (error) {
@@ -70,9 +94,8 @@ export const deleteImage = async (bucket, path) => {
 };
 
 /* ritorna url pubblico  */
-export const getPublicUrl = (bucket, path) => {
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-
+export const getPublicUrl = (path) => {
+  const { data } = supabase.storage.from(imageBucket).getPublicUrl(path);
   return data.publicUrl;
 };
 
@@ -80,7 +103,7 @@ export const getPublicUrl = (bucket, path) => {
 
 export const createTravel = async (travelData) => {
   try {
-    const orderdData = {
+    const orderedData = {
       cover_image: travelData.coverImage,
       description: travelData.description,
       start_date: travelData.startDate,
@@ -91,7 +114,7 @@ export const createTravel = async (travelData) => {
     };
     const { data, error } = await supabase
       .from('travels')
-      .insert([orderdData])
+      .insert([orderedData])
       .select()
       .single();
     if (error) throw error;
@@ -113,7 +136,11 @@ export const getTravels = async (userId = null) => {
       ascending: false,
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Errore query database:', error);
+      throw error;
+    }
+
     return data;
   } catch (error) {
     console.error('Errore recupero viaggi:', error);
