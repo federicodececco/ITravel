@@ -80,9 +80,18 @@ export const getPublicUrl = (bucket, path) => {
 
 export const createTravel = async (travelData) => {
   try {
+    const orderdData = {
+      cover_image: travelData.coverImage,
+      description: travelData.description,
+      start_date: travelData.startDate,
+      end_date: travelData.endDate,
+      place: travelData.location,
+      title: travelData.title,
+      user_id: travelData.user_id,
+    };
     const { data, error } = await supabase
       .from('travels')
-      .insert([travelData])
+      .insert([orderdData])
       .select()
       .single();
     if (error) throw error;

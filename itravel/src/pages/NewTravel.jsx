@@ -56,7 +56,9 @@ export default function NewTravel() {
         coverImage: coverImageUrl,
         user_id: 1,
       };
+      console.log(travelData);
       const newTravel = await createTravel(travelData);
+
       console.log('funionza!', newTravel);
       navigate(`/details/${newTravel.id}`);
     } catch (err) {
