@@ -7,6 +7,81 @@ const imageBucket =
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+export const createUserProfile = async (profileData) => {
+  try {
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('username')
+      .eq('username', profileData.username)
+      .single();
+    if (existingUser) {
+      throw new Error('username già esistente');
+    }
+    const { data, error } = await supabase
+      .from('users')
+      .insert([profileData])
+      .select()
+      .single();
+    if (error) {
+      throw new Error('brutto error creazione utente', error);
+    }
+    return data;
+  } catch (error) {
+    console.error('errore creazione utente', error);
+    throw error;
+  }
+};
+export const updateUserProfile = async (authId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('auth_id', authId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Errore aggiornamento profilo:', error);
+    throw error;
+  }
+};
+export const getUserProfile = async (authId) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_id', authId)
+      .single();
+    if (error) {
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error('errrore erecuper utente ', error);
+    throw error;
+  }
+};
+
+export const checkUsernameAvailability = async (username) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', username.toLowerCase())
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      return true;
+    }
+    if (error) throw error;
+    return false;
+  } catch (error) {
+    console.error('errore controllo username:', error);
+    throw error;
+  }
+};
 /* caricamento delle immagini to supabase */
 export const uploadImage = async (file, folder = '') => {
   try {

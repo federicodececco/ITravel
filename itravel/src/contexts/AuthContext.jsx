@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { getUserProfile, supabase } from '../lib/supabase';
+import { setServers } from 'dns';
 const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(null);
-
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setIsLoading] = useState(true);
   //signup
   const signUpNewUser = async (email, password) => {
     console.log('email:', email, 'password:', password);
@@ -29,6 +31,9 @@ export const AuthContextProvider = ({ children }) => {
         console.error('errore nel login', error);
         return { succes: false, error: error.message };
       }
+      if (data.user) {
+        await loadUserProfile(data.user.id);
+      }
       console.log('succeso nel login', data);
       return { success: true, data: data };
     } catch (error) {
@@ -42,23 +47,95 @@ export const AuthContextProvider = ({ children }) => {
       console.error('errore signing out', error);
       return { sucess: false, error };
     }
+    setServers(null);
+    setUserProfile(null);
+  };
+
+  const loadUserProfile = async (authId) => {
+    try {
+      const profile = await getUserProfile(authId);
+      setUserProfile(profile);
+      return profile;
+    } catch (error) {
+      console.error('errore caricemanto profiel', error);
+      setUserProfile(null);
+      return null;
+    }
+  };
+
+  const updateProfile = (updatedProfile) => {
+    setUserProfile(updatedProfile);
+  };
+  const hasCompletedProfile = () => {
+    return (
+      userProfile &&
+      userProfile.first_name &&
+      userProfile.last_name &&
+      userProfile.username
+    );
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    /* inizia la sessione */
+    const getInitialSession = async () => {
+      try {
+        const {
+          data: { session: initialSession },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('Errore recupero sessione:', error);
+        } else {
+          setSession(initialSession);
+          /* se è già presente carica il profile */
+          if (initialSession?.user) {
+            await loadUserProfile(initialSession.user.id);
+          }
+        }
+      } catch (error) {
+        console.error('Errore inizializzazione auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
       setSession(session);
+      /* handle del prifilo quando c'è login o logout */
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
+
+      if (event === 'INITIAL_SESSION') {
+        setIsLoading(false);
+      }
     });
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
-  return (
-    <AuthContext.Provider
-      value={{ session, signUpNewUser, signOut, loginUser }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    session,
+    userProfile,
+    loading,
+    loginUser,
+    signUpNewUser,
+    signOut,
+    loadUserProfile,
+    updateProfile,
+    hasCompletedProfile,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const UserAuth = () => {
