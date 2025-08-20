@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
+import { UserAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -9,22 +10,36 @@ export default function Login() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { session, loginUser } = UserAuth();
+
   const navigate = useNavigate();
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-    setError('');
+  };
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      console.log('password:', formData.password, 'email:', formData.email);
+      const result = await loginUser(
+        formData.email.toLowerCase(),
+        formData.password,
+      );
+      if (result.success) {
+        console.log(session);
+        navigate('/travel');
+      }
+    } catch (error) {
+      setError('errore nel login');
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
-    setFormData({
-      email: '',
-      password: '',
-    });
-    setError('');
-  };
   return (
     <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]'>
       <div className='w-full max-w-md bg-[#e6d3b3] rounded-2xl p-6 sm:p-8 shadow-lg'>
@@ -37,7 +52,7 @@ export default function Login() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className='space-y-6'>
+        <form onSubmit={handleLogin} className='space-y-6'>
           {error && (
             <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl'>
               {error}
@@ -111,19 +126,6 @@ export default function Login() {
             >
               Registrati qui
             </Link>
-          </p>
-        </div>
-
-        <div className='mt-6 p-4 bg-gray-100 rounded-xl'>
-          <p className='text-sm text-gray-600 text-center mb-2'>
-            <strong>Account di test:</strong>
-          </p>
-          <p className='text-sm text-gray-700 text-center'>
-            Email: <code className='bg-white px-2 py-1 rounded'>test</code>
-          </p>
-          <p className='text-sm text-gray-700 text-center'>
-            Password:{' '}
-            <code className='bg-white px-2 py-1 rounded'>password123</code>
           </p>
         </div>
       </div>

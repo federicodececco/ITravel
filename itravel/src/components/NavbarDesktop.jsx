@@ -1,4 +1,15 @@
+import { UserAuth } from '../contexts/AuthContext';
+
+import { useNavigate } from 'react-router';
+
 export default function NavbarDesktop() {
+  const navigate = useNavigate();
+  const { signOut } = UserAuth();
+  const handleSignout = () => {
+    signOut();
+
+    navigate('/login');
+  };
   return (
     <>
       <nav className=' fixed  top-3 left-4 right-4 mb-4 z-100'>
@@ -7,6 +18,7 @@ export default function NavbarDesktop() {
             <a className='btn btn-ghost text-xl' href='/'>
               ITravel
             </a>
+            <button onClick={handleSignout}>Logout</button>
           </div>
           <div className='flex-3 gap-2'>
             <input

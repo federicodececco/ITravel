@@ -1,14 +1,41 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { UserAuth } from '../contexts/AuthContext';
 
 export default function Register() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { session, signUpNewUser } = UserAuth();
+  console.log(session);
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const result = await signUpNewUser(
+        formData.email.toLowerCase(),
+        formData.password,
+      );
+      if (result.success) {
+        setFormData({
+          email: '',
+          password: '',
+          confirmPassword: '',
+        });
+        setError('');
+        navigate('/travel');
+      }
+    } catch (error) {
+      setError("c'è stato un errore");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -17,13 +44,6 @@ export default function Register() {
     setError('');
   };
 
-  const handleSubmit = () => {
-    setFormData({
-      email: '',
-      password: '',
-    });
-    setError('');
-  };
   return (
     <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]'>
       <div className='w-full max-w-md bg-[#e6d3b3] rounded-2xl p-6 sm:p-8 shadow-lg'>
@@ -34,7 +54,7 @@ export default function Register() {
           <p className='text-gray-600 text-lg'>Crea il tuo diario di viaggio</p>
         </div>
 
-        <form onSubmit={handleSubmit} className='space-y-6'>
+        <form onSubmit={handleSignUp} className='space-y-6'>
           {error && (
             <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl'>
               {error}

@@ -10,25 +10,31 @@ import TravelDetailLayout from './Layout/TravelDetailLayout';
 import NewTravel from './pages/newTravel';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import { AuthContextProvider } from './contexts/AuthContext';
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path='/register' element={<Register />} />
-        <Route path='/login' element={<Login />} />
-        <Route element={<DefaultLayout />}>
-          <Route path='/' element={<HomePage />}></Route>
-          <Route path='/travel/add' element={<NewTravel />} />
-          <Route path='/travel' element={<MyTravels />}></Route>
-          <Route path='add/:travelId/new-page' element={<NewPage />}></Route>
-        </Route>
-        <Route element={<TravelDetailLayout />}>
-          <Route path='/details/:travelId' element={<TravelDetail />}></Route>
-        </Route>
+      <AuthContextProvider>
+        <Routes>
+          <Route path='/register' element={<Register />} />
+          <Route path='/login' element={<Login />} />
+          <Route element={<DefaultLayout />}>
+            <Route path='/' element={<HomePage />}></Route>
+            <Route path='/travel/add' element={<NewTravel />} />
+            <Route path='/travel' element={<MyTravels />}></Route>
+            <Route path='add/:travelId/new-page' element={<NewPage />}></Route>
+          </Route>
+          <Route element={<TravelDetailLayout />}>
+            <Route path='/details/:travelId' element={<TravelDetail />}></Route>
+          </Route>
 
-        <Route path='/travel/:travelId/page/:pageId' element={<Page />}></Route>
-      </Routes>
+          <Route
+            path='/travel/:travelId/page/:pageId'
+            element={<Page />}
+          ></Route>
+        </Routes>
+      </AuthContextProvider>
     </BrowserRouter>
   );
 }
