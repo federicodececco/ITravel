@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
+import { getTravelById } from '../lib/supabase';
 
 const fintoViaggio = {
   id: 1,
@@ -60,14 +61,32 @@ export default function TravelDetail() {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const [travel, setTravel] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [newTravel, setNewTravel] = useState(null);
+  const fetchTravel = async (id) => {
+    try {
+      setLoading(true);
+      const data = await getTravelById(id);
+      setNewTravel(data);
+      console.log(newTravel);
+    } catch (error) {
+      console.error('errore fetching viaggio', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
+    fetchTravel(travelId);
     // simulazione di caricamento
     setTimeout(() => {
       setTravel(fintoViaggio);
       setLoading(false);
     }, 500);
   }, [travelId]);
+
+  useEffect(() => {
+    console.log(newTravel);
+  }, [newTravel]);
 
   const handlePageClick = (pageId) => {
     navigate(`/travel/${travelId}/page/${pageId}`);
@@ -93,7 +112,7 @@ export default function TravelDetail() {
     <div className='min-h-screen bg-[#1e1e1e] font-[Playfair_Display]'>
       <div className='relative h-64 sm:h-80 lg:h-96 overflow-hidden'>
         <img
-          src={travel.coverImage}
+          src={travel.cover_image}
           alt={travel.title}
           className='w-full h-full object-cover'
         />
@@ -125,18 +144,18 @@ export default function TravelDetail() {
           <div className='flex flex-wrap items-center gap-4 text-sm sm:text-base opacity-90'>
             <div className='flex items-center gap-2'>
               <i className='fa-solid fa-location-dot'></i>
-              <span>{travel.location}</span>
+              <span>{travel.place}</span>
             </div>
             <div className='flex items-center gap-2'>
               <i className='fa-solid fa-calendar'></i>
               <span>
-                {new Date(travel.startDate).toLocaleDateString('it-IT')} -{' '}
-                {new Date(travel.endDate).toLocaleDateString('it-IT')}
+                {new Date(travel.start_date).toLocaleDateString('it-IT')} -{' '}
+                {new Date(travel.end_date).toLocaleDateString('it-IT')}
               </span>
             </div>
             <div className='flex items-center gap-2'>
               <i className='fa-solid fa-book'></i>
-              <span>{travel.pages.length} pagine</span>
+              {/* <span>{travel.pages.length} pagine</span> */}
             </div>
           </div>
         </div>

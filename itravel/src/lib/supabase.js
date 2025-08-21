@@ -183,11 +183,15 @@ export const createTravel = async (travelData) => {
       cover_image: travelData.coverImage,
       description: travelData.description,
       start_date: travelData.startDate,
-      end_date: travelData.endDate,
+
       place: travelData.location,
       title: travelData.title,
-      user_id: travelData.user_id,
+      profile_id: travelData.user_id,
     };
+    if (travelData.endDate != '') {
+      orderedData.end_date = travelData.endDate;
+    }
+
     const { data, error } = await supabase
       .from('travels')
       .insert([orderedData])
@@ -227,27 +231,10 @@ export const getTravelById = async (travelId) => {
   try {
     const { data, error } = await supabase
       .from('travels')
-      .select(
-        `
-        *,
-        pages (
-          id,
-          title,
-          description,
-          cover_image,
-          date,
-          order_index,
-          page_images (
-            id,
-            image_url,
-            order_index
-          )
-        )
-      `,
-      )
+      .select()
       .eq('id', travelId)
       .single();
-
+    console.log(data);
     if (error) throw error;
     return data;
   } catch (error) {

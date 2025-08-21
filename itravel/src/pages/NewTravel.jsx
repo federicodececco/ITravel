@@ -15,9 +15,6 @@ export default function NewTravel() {
     startDate: '',
     endDate: '',
   });
-  if (session) {
-    console.log(session.user.id);
-  }
 
   const [coverImage, setCoverImage] = useState(null);
   const [prevImage, setPrevImage] = useState(null);
@@ -54,11 +51,14 @@ export default function NewTravel() {
         const uploadResult = await uploadImage(coverImage, `travels`);
         coverImageUrl = uploadResult.publicUrl;
       }
+
       const travelData = {
         ...formData,
+
         coverImage: coverImageUrl,
         user_id: session.user.id,
       };
+
       console.log(travelData);
       const newTravel = await createTravel(travelData);
 

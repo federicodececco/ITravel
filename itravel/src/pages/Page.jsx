@@ -11,6 +11,8 @@ const viaggio = {
   coverImage: '/placeholder.png',
   images: ['/placeholder.png', '/placeholder.png', '/placeholder.png'],
   date: '2024-08-15',
+  longitude: '',
+  latitude: '',
 };
 
 export default function Page() {

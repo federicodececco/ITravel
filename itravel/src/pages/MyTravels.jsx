@@ -30,6 +30,7 @@ export default function MyTravels() {
       {travels.map((elem) => {
         return (
           <div
+            key={elem.id}
             onClick={() => navigate(`/details/${elem.id}/`)}
             className='card card-side bg-base-100 shadow-lg hover:cursor-pointer hover:bg-base-200'
           >
