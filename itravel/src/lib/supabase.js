@@ -2,87 +2,88 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
-const imageBucket =
-  import.meta.env.VITE_SUPABASE_BUCKET_IMAGES || 'travel-images';
-
+const imageBucket = 'travel-images';
+const avatarBucket = 'avatar-images';
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const createUserProfile = async (profileData) => {
-  try {
-    const { data: existingUser, error: checkError } = await supabase
-      .from('users')
-      .select('username')
-      .eq('username', profileData.username)
-      .single();
-    if (existingUser) {
-      throw new Error('username già esistente');
-    }
-    const { data, error } = await supabase
-      .from('users')
-      .insert([profileData])
-      .select()
-      .single();
-    if (error) {
-      throw new Error('brutto error creazione utente', error);
-    }
-    return data;
-  } catch (error) {
-    console.error('errore creazione utente', error);
-    throw error;
-  }
-};
-export const updateUserProfile = async (authId, updates) => {
+export const updateProfile = async (profileData, userId) => {
   try {
     const { data, error } = await supabase
-      .from('users')
-      .update(updates)
-      .eq('auth_id', authId)
+      .from('profiles')
+      .update({
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        username: profileData.username,
+        avatar_url: profileData.avatarUrl,
+      })
       .select()
-      .single();
+      .eq('id', userId);
 
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Errore aggiornamento profilo:', error);
+    console.error('errore updateing profile', error);
     throw error;
   }
 };
-export const getUserProfile = async (authId) => {
+
+export const getProfile = async (userId) => {
   try {
     const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('auth_id', authId)
+      .from('profiles')
+      .select()
+      .eq('id', userId)
+      .limit(1)
       .single();
     if (error) {
       throw error;
     }
     return data;
   } catch (error) {
-    console.error('errrore erecuper utente ', error);
+    console.error('errore fetching profilo');
     throw error;
   }
 };
 
-export const checkUsernameAvailability = async (username) => {
-  try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', username.toLowerCase())
-      .single();
-
-    if (error && error.code === 'PGRST116') {
-      return true;
-    }
-    if (error) throw error;
-    return false;
-  } catch (error) {
-    console.error('errore controllo username:', error);
-    throw error;
-  }
-};
 /* caricamento delle immagini to supabase */
+export const uploadAvatarImage = async (file, folder = '') => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = folder ? `${folder}/${fileName}` : fileName;
+
+    console.log('Upload - Bucket:', avatarBucket, 'Path:', filePath);
+
+    const { data, error } = await supabase.storage
+      .from(avatarBucket)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Errore Supabase Storage:', error);
+      throw error;
+    }
+
+    // Genera l'URL pubblico corretto
+    const { data: urlData } = supabase.storage
+      .from(avatarBucket)
+      .getPublicUrl(filePath);
+
+    console.log('URL generato:', urlData.publicUrl);
+
+    return {
+      ...data,
+      publicUrl: urlData.publicUrl,
+      path: filePath,
+    };
+  } catch (error) {
+    console.error('Errore durante il caricamento della foto:', error);
+    throw error;
+  }
+};
+
 export const uploadImage = async (file, folder = '') => {
   try {
     const fileExt = file.name.split('.').pop();
@@ -199,13 +200,13 @@ export const createTravel = async (travelData) => {
     throw error;
   }
 };
-export const getTravels = async (userId = null) => {
+export const getTravels = async () => {
   try {
     let query = supabase.from('travels').select('*');
 
-    if (userId) {
+    /*  if (userId) {
       query = query.eq('user_id', userId);
-    }
+    } */
 
     const { data, error } = await query.order('created_at', {
       ascending: false,

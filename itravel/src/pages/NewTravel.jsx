@@ -2,10 +2,12 @@ import { useNavigate } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
 import { useState } from 'react';
 import { createTravel, uploadImage } from '../lib/supabase';
+import { UserAuth } from '../contexts/AuthContext';
 
 export default function NewTravel() {
   const { isMobile } = useBreakpoint();
   const navigate = useNavigate();
+  const { session } = UserAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -13,6 +15,10 @@ export default function NewTravel() {
     startDate: '',
     endDate: '',
   });
+  if (session) {
+    console.log(session.user.id);
+  }
+
   const [coverImage, setCoverImage] = useState(null);
   const [prevImage, setPrevImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +57,7 @@ export default function NewTravel() {
       const travelData = {
         ...formData,
         coverImage: coverImageUrl,
-        user_id: 1,
+        user_id: session.user.id,
       };
       console.log(travelData);
       const newTravel = await createTravel(travelData);

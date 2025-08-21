@@ -15,6 +15,18 @@ export default function Register() {
   console.log(session);
   const handleSignUp = async (e) => {
     e.preventDefault();
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Tutti i campi sono obbligatori');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Le password non coincidono');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError('La password deve essere di almeno 6 caratteri');
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await signUpNewUser(

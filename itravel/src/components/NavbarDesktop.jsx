@@ -1,15 +1,36 @@
-import { UserAuth } from '../contexts/AuthContext';
-
 import { useNavigate } from 'react-router';
 
-export default function NavbarDesktop() {
-  const navigate = useNavigate();
-  const { signOut } = UserAuth();
-  const handleSignout = () => {
-    signOut();
+import { useEffect, useState } from 'react';
+import { UserAuth } from '../contexts/AuthContext';
 
+export default function NavbarDesktop() {
+  const { logout } = UserAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleLogout = async () => {
+    logout();
     navigate('/login');
   };
+
+  const loadProfile = () => {
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+      try {
+        const parsedProfile = JSON.parse(savedProfile);
+        setProfile(parsedProfile);
+      } catch (error) {
+        console.error('errore parsing local storage', error);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
   return (
     <>
       <nav className=' fixed  top-3 left-4 right-4 mb-4 z-100'>
@@ -18,7 +39,6 @@ export default function NavbarDesktop() {
             <a className='btn btn-ghost text-xl' href='/'>
               ITravel
             </a>
-            <button onClick={handleSignout}>Logout</button>
           </div>
           <div className='flex-3 gap-2'>
             <input
@@ -35,10 +55,27 @@ export default function NavbarDesktop() {
                 className='btn btn-ghost btn-circle avatar'
               >
                 <div className='w-10 rounded-full'>
-                  <img
-                    alt='Tailwind CSS Navbar component'
-                    src='https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp'
-                  />
+                  {isLoading ? (
+                    // Skeleton/placeholder mentre carica
+                    <div className='w-full h-full bg-gray-300 animate-pulse rounded-full'></div>
+                  ) : profile?.avatar_url ? (
+                    <img alt='Profile avatar' src={profile.avatar_url} />
+                  ) : (
+                    // Icona default se non c'è avatar
+                    <div className='w-full h-full bg-gray-400 rounded-full flex items-center justify-center'>
+                      <svg
+                        className='w-6 h-6 text-gray-600'
+                        fill='currentColor'
+                        viewBox='0 0 20 20'
+                      >
+                        <path
+                          fillRule='evenodd'
+                          d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'
+                          clipRule='evenodd'
+                        />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
               <ul
@@ -46,7 +83,7 @@ export default function NavbarDesktop() {
                 className='menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow'
               >
                 <li>
-                  <a>
+                  <a href='/profile'>
                     <i class='fa-solid fa-user'></i> Profilo
                   </a>
                 </li>
@@ -60,10 +97,15 @@ export default function NavbarDesktop() {
                     <i class='fa-solid fa-gear'></i> impostazioni
                   </a>
                 </li>
+
                 <li>
-                  <a>
-                    <i class='fa-solid fa-door-open'></i> Logout
-                  </a>
+                  <button
+                    onClick={handleLogout}
+                    className='flex items-center gap-3 px-3 py-2 text-error hover:bg-error/10 rounded-lg transition-colors'
+                  >
+                    <i className='fa-solid fa-door-open text-base'></i>
+                    <span>Logout</span>
+                  </button>
                 </li>
               </ul>
             </div>

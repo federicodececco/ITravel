@@ -7,16 +7,18 @@ import NewPage from './pages/NewPage';
 import Page from './pages/Page';
 import TravelDetail from './pages/TravelDetail';
 import TravelDetailLayout from './Layout/TravelDetailLayout';
-import NewTravel from './pages/newTravel';
+import NewTravel from './pages/NewTravel';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthContextProvider } from './contexts/AuthContext';
+import ProfileCompletition from './pages/ProfileCompletition';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthContextProvider>
         <Routes>
+          <Route path='/profile' element={<ProfileCompletition />} /> *
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />
           <Route element={<DefaultLayout />}>
@@ -28,7 +30,6 @@ function App() {
           <Route element={<TravelDetailLayout />}>
             <Route path='/details/:travelId' element={<TravelDetail />}></Route>
           </Route>
-
           <Route
             path='/travel/:travelId/page/:pageId'
             element={<Page />}
