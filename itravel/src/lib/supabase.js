@@ -122,7 +122,7 @@ export const uploadImage = async (file, folder = '') => {
   }
 };
 
-export const uploadMultipleImages = async (files, folder = '') => {
+export const uploadMultipleImages = async (files, folder = '', imageData) => {
   try {
     const uploadPromises = files.map(async (file, index) => {
       const fileExt = file.name.split('.').pop();
@@ -142,10 +142,18 @@ export const uploadMultipleImages = async (files, folder = '') => {
         .from(imageBucket)
         .getPublicUrl(filePath);
 
+      const newImageData = {
+        ...imageData,
+        image_url: urlData.publicUrl,
+      };
+
+      const dbEntry = await createNewImageEntry(newImageData);
+
       return {
         ...data,
         publicUrl: urlData.publicUrl,
         path: filePath,
+        dbEntry,
       };
     });
 
@@ -153,6 +161,35 @@ export const uploadMultipleImages = async (files, folder = '') => {
     return results;
   } catch (error) {
     console.error('Errore caricamento multiplo:', error);
+    throw error;
+  }
+};
+
+export const createNewImageEntry = async (imageData) => {
+  try {
+    const orderedData = {
+      travel_id: imageData.travelId,
+      profile_id: imageData.user_id,
+      page_id: imageData.pageId,
+      image_url: imageData.image_url,
+    };
+
+    const { data, error } = await supabase
+      .from('images')
+      .select()
+      .insert([orderedData])
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error(
+      "c'è stato un errore con il caricamento delle immagini",
+      error,
+    );
     throw error;
   }
 };
@@ -183,7 +220,6 @@ export const createTravel = async (travelData) => {
       cover_image: travelData.coverImage,
       description: travelData.description,
       start_date: travelData.startDate,
-
       place: travelData.location,
       title: travelData.title,
       profile_id: travelData.user_id,

@@ -3,12 +3,19 @@ import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
 
 export default function NewPage() {
+  const defaultFormState = {
+    title: '',
+    description: '',
+    latitude: '',
+    longitude: '',
+  };
   const navigate = useNavigate();
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const { travelId } = useParams();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [formData, setFormData] = useState(defaultFormState);
   const [mainImage, setMainImage] = useState(null);
+  const [prevImage, setPrevImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [additionalImages, setAdditionalImages] = useState([
     null,
     null,
@@ -17,8 +24,23 @@ export default function NewPage() {
     null,
   ]);
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleMainImageChange = (e) => {
-    setMainImage(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setMainImage(file);
+
+      /* crea prev */
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPrevImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleAdditionalImageChange = (index, file) => {
@@ -31,13 +53,22 @@ export default function NewPage() {
     navigate(`/details/${travelId}`);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    console.log('Titolo:', title);
-    console.log('Descrizione:', description);
-    console.log('Immagine Principale:', mainImage);
-    console.log('Immagini di Contorno:', additionalImages);
+    setIsLoading(true);
+    try {
+      let cover_image = null;
+      if (mainImage) {
+        const uploadResult = await uploadImage(mainImage, `pages`);
+        cover_image = uploadResult.publicUrl;
+      }
+      if (additionalImages) {
+        additionalImages.map((elem) => {});
+      }
+      const pageData = {
+        ...formData,
+      };
+    } catch (error) {}
   };
   return (
     <section className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]  overflow-y-auto md:pt-20 pb-24 md:pb-0 '>
@@ -57,8 +88,9 @@ export default function NewPage() {
                 id='title'
                 name='title'
                 type='text'
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                value={formData.title}
+                placeholder='titolo'
+                onChange={handleInputChange}
                 aria-label='Titolo della pagina'
                 className='w-full pr-2 pl-4 pt-2 pb-2 rounded-xl border-2 border-black text-base sm:text-lg'
               />
@@ -74,8 +106,8 @@ export default function NewPage() {
               <textarea
                 id='description'
                 name='description'
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={formData.description}
+                onChange={handleInputChange}
                 placeholder='Cosa hai fatto oggi?'
                 aria-label='Descrizione della giornata'
                 className='w-full pr-2 pl-4 pt-2 pb-8 rounded-xl border-2 border-black text-base sm:text-lg resize-y min-h-[120px]'
