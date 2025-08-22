@@ -88,6 +88,7 @@ export const AuthContextProvider = ({ children }) => {
     localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
   };
   useEffect(() => {
+    setLoading(true);
     const savedProfile = localStorage.getItem('userProfile');
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile));
@@ -104,6 +105,7 @@ export const AuthContextProvider = ({ children }) => {
         }
       },
     );
+    setLoading(false);
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -117,7 +119,6 @@ export const AuthContextProvider = ({ children }) => {
     updateUserProfile,
     signUpNewUser,
     signOut,
-    setLoading,
     isAuthenticated: !!session,
     userId: session?.user?.id || null,
   };
