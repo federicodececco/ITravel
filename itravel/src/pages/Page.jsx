@@ -1,7 +1,14 @@
 import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
+import {
+  getImagesForPage,
+  getPageById,
+  getPageNavigation,
+} from '../lib/supabase';
+
+import Map from '../components/Map';
 
 const viaggio = {
   id: 1,
@@ -16,20 +23,61 @@ const viaggio = {
 };
 
 export default function Page() {
-  const { travelId, pageId } = useParams;
+  const { travelId, pageId } = useParams();
   const navigate = useNavigate();
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
-  const [pageData, setPageData] = useState(viaggio);
+
+  const [pageData, setPageData] = useState(null);
+  const [images, setImages] = useState([]);
+  const [navigationData, setNavigationData] = useState({
+    hasPrevious: false,
+    hasNext: false,
+    totalPages: 0,
+    currentIndex: 1,
+  });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [navigationData, setNavigationData] = useState({
-    hasPrevious: pageId > 1,
-    hasNext: true,
-    totalPages: 5,
-  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [position, setPosition] = useState(null);
+
+  useEffect(() => {
+    loadPageData();
+  }, [pageId, travelId]);
+
+  useEffect(() => {
+    console.log(pageData);
+  }, [pageData]);
+
+  const loadPageData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const [page, pageImages, navigation] = await Promise.all([
+        getPageById(pageId),
+        getImagesForPage(pageId),
+        getPageNavigation(pageId, travelId),
+      ]);
+
+      setPageData(page);
+      setImages(pageImages);
+      setNavigationData(navigation);
+      if (page.latitude != null && page.longitude != 0) {
+        setPosition({ lat: page.latitude, lng: page.longitude });
+      }
+      console.log(position);
+    } catch (err) {
+      console.error('Errore caricamento pagina:', err);
+      setError('Errore nel caricamento della pagina');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePreviousPage = () => {
     const prevPageId = parseInt(pageId) - 1;
+    setPosition(null);
     if (prevPageId > 0) {
       navigate(`/travel/${travelId}/page/${prevPageId}`);
     }
@@ -37,6 +85,7 @@ export default function Page() {
 
   const handleNextPage = () => {
     const nextPageId = parseInt(pageId) + 1;
+    setPosition(null);
     navigate(`/travel/${travelId}/page/${nextPageId}`);
   };
 
@@ -60,6 +109,10 @@ export default function Page() {
       prev === pageData.images.length - 1 ? 0 : prev + 1,
     );
   };
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('it-IT');
+  };
 
   const pageSwipeHandlers = useSwipeable({
     onSwipedLeft: () => {
@@ -81,31 +134,73 @@ export default function Page() {
 
   const imageSwipeHandlers = useSwipeable({
     onSwipedLeft: () => {
-      if (pageData.images.length > 1) {
+      const allImages = [
+        pageData?.cover_image,
+        ...images.map((img) => img.image_url),
+      ].filter(Boolean);
+      if (allImages.length > 1) {
         handleNextImage();
       }
     },
     onSwipedRight: () => {
-      if (pageData.images.length > 1) {
+      const allImages = [
+        pageData?.cover_image,
+        ...images.map((img) => img.image_url),
+      ].filter(Boolean);
+      if (allImages.length > 1) {
         handlePrevImage();
       }
     },
     preventScrollOnSwipe: true,
-    trackMouse: true,
+    trackMouse: false,
     delta: 15,
     swipeDuration: 500,
     touchEventOptions: { passive: false },
   });
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center'>
+        <div className='text-white text-xl flex items-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-white mr-3'></div>
+          Caricamento...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !pageData) {
+    return (
+      <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='text-red-400 text-xl mb-4'>
+            {error || 'Pagina non trovata'}
+          </div>
+          <button
+            onClick={() => navigate(`/details/${travelId}`)}
+            className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700'
+          >
+            Torna al Viaggio
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const allImages = [
+    pageData.cover_image,
+    ...images.map((img) => img.image_url),
+  ].filter(Boolean);
 
   return (
     <div
       className='min-h-screen bg-cover bg-center bg-fixed relative'
       {...(!showImageModal ? pageSwipeHandlers : {})}
     >
-      <div className='absolute inset-0 bg-[#1e1e1e] backdrop-blur-[0.5px] '></div>
+      <div className='absolute inset-0 bg-[#1e1e1e] backdrop-blur-[0.5px]'></div>
 
-      <div className='relative z-10 min-h-screen pb-10 md:pt-0 pt-15 '>
-        <div className='flex justify-between items-center p-4 bg-black/20 backdrop-blur-sm fixed top-0 w-full z-100'>
+      <div className='relative z-10 min-h-screen pb-10 md:pt-0 pt-20'>
+        {/* Header fisso */}
+        <div className='flex justify-between items-center p-4 bg-black/20 backdrop-blur-sm fixed top-0 w-full z-50'>
           <button
             onClick={() => navigate(`/details/${travelId}`)}
             className='text-white hover:text-gray-300 transition-colors'
@@ -113,7 +208,9 @@ export default function Page() {
             <i className='fa-solid fa-arrow-left text-xl'></i>
           </button>
           <div className='text-white text-center'>
-            <h1 className='text-lg font-semibold'>Pagina {pageData.id}</h1>
+            <h1 className='text-lg font-semibold'>
+              Pagina {navigationData.currentIndex}
+            </h1>
             <p className='text-sm opacity-80'>
               {navigationData.totalPages} pagine
             </p>
@@ -122,44 +219,50 @@ export default function Page() {
         </div>
 
         <div className='px-4 py-6 max-w-4xl mx-auto md:pt-20 md:mt-4'>
+          {/* Contenuto principale della pagina */}
           <div className='bg-[url(/test-bg.jpeg)] backdrop-blur-md rounded-2xl shadow-xl overflow-hidden mb-6'>
-            <div className='relative'>
-              <img
-                src={pageData.coverImage}
-                alt={pageData.title}
-                className='w-full h-64 sm:h-80 object-cover cursor-pointer'
-                onClick={() => handleImageClick(0)}
-              />
-              <div className='absolute bottom-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg'>
-                {new Date(pageData.date).toLocaleDateString('it-IT')}
+            {pageData.cover_image && (
+              <div className='relative'>
+                <img
+                  src={pageData.cover_image}
+                  alt={pageData.title}
+                  className='w-full h-64 sm:h-80 object-cover cursor-pointer'
+                  onClick={() => handleImageClick(0)}
+                />
+                <div className='absolute bottom-4 left-4 bg-black/50 text-white px-3 py-1 rounded-lg'>
+                  {formatDate(pageData.created_at)}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className='p-6'>
               <h2 className='text-2xl font-bold mb-4 text-gray-800'>
                 {pageData.title}
               </h2>
-              <p className='text-gray-600 leading-relaxed text-lg'>
-                {pageData.description}
-              </p>
+              {pageData.description && (
+                <p className='text-gray-600 leading-relaxed text-lg whitespace-pre-wrap'>
+                  {pageData.description}
+                </p>
+              )}
             </div>
           </div>
-
-          {pageData.images.length > 1 && (
+          {position != null && <Map location={position}></Map>}
+          {/* Immagini aggiuntive */}
+          {images.length > 0 && (
             <div className='bg-[#e6d3b3]/90 backdrop-blur-md rounded-2xl shadow-xl p-6 mb-6'>
               <h3 className='text-xl font-semibold mb-4 text-gray-800'>
                 Altre foto
               </h3>
               <div className='grid grid-cols-2 sm:grid-cols-3 gap-4'>
-                {pageData.images.slice(1).map((image, index) => (
+                {images.map((image, index) => (
                   <div
-                    key={index}
+                    key={image.id}
                     className='relative aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity'
                     onClick={() => handleImageClick(index + 1)}
                   >
                     <img
-                      src={image}
-                      alt={`Foto ${index + 2}`}
+                      src={image.image_url}
+                      alt={`Foto ${index + 1}`}
                       className='w-full h-full object-cover'
                     />
                   </div>
@@ -169,6 +272,7 @@ export default function Page() {
           )}
         </div>
 
+        {/* Navigazione inferiore */}
         <div className='fixed bottom-0 left-0 right-0 bg-black/20 md:backdrop-blur-sm p-4'>
           <div className='flex justify-between items-center max-w-md mx-auto'>
             <button
@@ -199,7 +303,8 @@ export default function Page() {
           </div>
         </div>
 
-        {showImageModal && (
+        {/* Modal per visualizzazione immagini */}
+        {showImageModal && allImages.length > 0 && (
           <div
             className='fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4'
             {...imageSwipeHandlers}
@@ -213,12 +318,12 @@ export default function Page() {
               </button>
 
               <img
-                src={pageData.images[currentImageIndex]}
+                src={allImages[currentImageIndex]}
                 alt={`Foto ${currentImageIndex + 1}`}
                 className='w-full h-auto max-h-[80vh] object-contain rounded-lg'
               />
 
-              {pageData.images.length > 1 && (
+              {allImages.length > 1 && (
                 <>
                   <button
                     onClick={handlePrevImage}
@@ -237,7 +342,7 @@ export default function Page() {
               )}
 
               <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white'>
-                {currentImageIndex + 1} / {pageData.images.length}
+                {currentImageIndex + 1} / {allImages.length}
               </div>
             </div>
           </div>

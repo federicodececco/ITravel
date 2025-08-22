@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
+import { UserAuth } from '../contexts/AuthContext';
+import { createPage, uploadImage, uploadMultipleImages } from '../lib/supabase';
 
 export default function NewPage() {
   const defaultFormState = {
@@ -12,10 +14,13 @@ export default function NewPage() {
   const navigate = useNavigate();
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const { travelId } = useParams();
+  const { session } = UserAuth();
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState(defaultFormState);
   const [mainImage, setMainImage] = useState(null);
   const [prevImage, setPrevImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useState(null);
   const [additionalImages, setAdditionalImages] = useState([
     null,
     null,
@@ -53,23 +58,81 @@ export default function NewPage() {
     navigate(`/details/${travelId}`);
   };
 
+  const handleLocation = () => {
+    console.log(location);
+    if (location) {
+      setLocation(null);
+    } else {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setLocation({ latitude, longitude });
+          },
+          (error) => {
+            console.error('errore fetching location', error);
+          },
+        );
+      } else {
+        console.error('geolocation not supported by browser');
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
+
     try {
-      let cover_image = null;
+      if (!formData.title.trim()) {
+        throw new Error('Il titolo è obbligatorio');
+      }
+
+      let coverImageUrl = null;
       if (mainImage) {
         const uploadResult = await uploadImage(mainImage, `pages`);
-        cover_image = uploadResult.publicUrl;
+        coverImageUrl = uploadResult.publicUrl;
       }
-      if (additionalImages) {
-        additionalImages.map((elem) => {});
-      }
+
       const pageData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        coverImage: coverImageUrl,
+        latitude: null,
+        longitude: null,
+        travelId: parseInt(travelId),
+        userId: session.user.id,
       };
-    } catch (error) {}
+      if (location != null) {
+        pageData.latitude = location.latitude;
+        pageData.longitude = location.longitude;
+      }
+      console.log(pageData);
+      const newPage = await createPage(pageData);
+
+      const validAdditionalImages = additionalImages.filter(
+        (img) => img !== null,
+      );
+      if (validAdditionalImages.length > 0) {
+        const imageData = {
+          travelId: parseInt(travelId),
+          pageId: newPage.id,
+          user_id: session.user.id,
+        };
+
+        await uploadMultipleImages(validAdditionalImages, 'pages', imageData);
+      }
+
+      navigate(`/travel/${travelId}/page/${newPage.id}`);
+    } catch (err) {
+      console.error('Errore creazione pagina:', err);
+      setError(err.message || 'Errore durante la creazione della pagina');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   return (
     <section className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]  overflow-y-auto md:pt-20 pb-24 md:pb-0 '>
       <div className=' w-full max-w-md sm:max-w-lg md:max-w-xl bg-[#e6d3b3] rounded-2xl p-4 sm:p-6 shadow-lg text-lg text-black bg-[url(/test-bg.jpeg)] relative'>
@@ -185,6 +248,25 @@ export default function NewPage() {
               >
                 Annulla
               </button>
+              {!location && (
+                <button
+                  onClick={handleLocation}
+                  type='button'
+                  className='border bg-[#e6d3b3] border-black py-2 px-4 rounded hover:bg-gray-300 text-sm sm:text-base'
+                >
+                  Aggiungi posizione
+                </button>
+              )}
+              {location && (
+                <button
+                  onClick={handleLocation}
+                  type='button'
+                  className='border bg-[#e6d3b3] border-black py-2 px-4 rounded hover:bg-gray-300 text-sm sm:text-base'
+                >
+                  Rimuovi posizione
+                </button>
+              )}
+
               <button
                 type='submit'
                 className='bg-black text-[#e6d3b3] py-2 px-6 rounded hover:bg-gray-800 text-sm sm:text-base'

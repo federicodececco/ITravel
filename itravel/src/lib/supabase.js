@@ -86,6 +86,15 @@ export const uploadAvatarImage = async (file, folder = '') => {
 
 export const uploadImage = async (file, folder = '') => {
   try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    console.log('Utente autenticato:', user);
+
+    if (!user) {
+      console.error('Utente non autenticato');
+      return;
+    }
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
     const filePath = folder ? `${folder}/${fileName}` : fileName;
@@ -124,6 +133,13 @@ export const uploadImage = async (file, folder = '') => {
 
 export const uploadMultipleImages = async (files, folder = '', imageData) => {
   try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error('user non autenticato');
+    }
     const uploadPromises = files.map(async (file, index) => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}_${index}.${fileExt}`;
@@ -145,6 +161,7 @@ export const uploadMultipleImages = async (files, folder = '', imageData) => {
       const newImageData = {
         ...imageData,
         image_url: urlData.publicUrl,
+        user_id: user.id,
       };
 
       const dbEntry = await createNewImageEntry(newImageData);
@@ -172,13 +189,15 @@ export const createNewImageEntry = async (imageData) => {
       profile_id: imageData.user_id,
       page_id: imageData.pageId,
       image_url: imageData.image_url,
+      user_id: imageData.user_id,
     };
+    console.log('dati finali', orderedData);
 
     const { data, error } = await supabase
       .from('images')
-      .select()
       .insert([orderedData])
       .select()
+
       .single();
 
     if (error) {
@@ -275,6 +294,112 @@ export const getTravelById = async (travelId) => {
     return data;
   } catch (error) {
     console.error('Errore recupero viaggio:', error);
+    throw error;
+  }
+};
+
+/* crud pages */
+export const createPage = async (pageData) => {
+  try {
+    const orderedData = {
+      title: pageData.title,
+      description: pageData.description,
+      cover_image: pageData.coverImage,
+      latitude: pageData.latitude || null,
+      longitude: pageData.longitude || null,
+      travel_id: pageData.travelId,
+    };
+
+    const { data, error } = await supabase
+      .from('pages')
+      .insert([orderedData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Errore creazione pagina:', error);
+    throw error;
+  }
+};
+
+export const getPagesByTravelId = async (travelId) => {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('travel_id', travelId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Errore recupero pagine:', error);
+    throw error;
+  }
+};
+
+export const getPageById = async (pageId) => {
+  try {
+    const { data, error } = await supabase
+      .from('pages')
+      .select('*')
+      .eq('id', pageId)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Errore recupero pagina:', error);
+    throw error;
+  }
+};
+
+export const getImagesForPage = async (pageId) => {
+  try {
+    const { data, error } = await supabase
+      .from('images')
+      .select('*')
+      .eq('page_id', pageId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Errore recupero immagini pagina:', error);
+    throw error;
+  }
+};
+
+/* ordinati per data, per non creare una double linked list */
+export const getPageNavigation = async (pageId, travelId) => {
+  try {
+    const { data: allPages, error } = await supabase
+      .from('pages')
+      .select('id')
+      .eq('travel_id', travelId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    const currentIndex = allPages.findIndex(
+      (page) => page.id === parseInt(pageId),
+    );
+
+    return {
+      hasPrevious: currentIndex > 0,
+      hasNext: currentIndex < allPages.length - 1,
+      previousPageId: currentIndex > 0 ? allPages[currentIndex - 1].id : null,
+      nextPageId:
+        currentIndex < allPages.length - 1
+          ? allPages[currentIndex + 1].id
+          : null,
+      currentIndex: currentIndex + 1,
+      totalPages: allPages.length,
+    };
+  } catch (error) {
+    console.error('Errore recupero navigazione:', error);
     throw error;
   }
 };
