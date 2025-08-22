@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(null);
-  const [loading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
 
   const signUpNewUser = async (email, password) => {
@@ -30,7 +30,7 @@ export const AuthContextProvider = ({ children }) => {
       });
       if (error) {
         console.error('errore nel login', error);
-        return { succes: false, error: error.message };
+        return { success: false, error: error.message };
       }
 
       console.log('succeso nel login', data);
@@ -47,6 +47,9 @@ export const AuthContextProvider = ({ children }) => {
       console.error('errore');
     }
     console.log('tutto bene');
+    setSession(null);
+    setProfile(null);
+    localStorage.removeItem('userProfile');
   };
 
   const signOut = async () => {
@@ -74,11 +77,16 @@ export const AuthContextProvider = ({ children }) => {
 
       setProfile(newProfile);
       localStorage.setItem('userProfile', JSON.stringify(newProfile));
+      return newProfile;
     } catch (error) {
       console.error('errore fetching new profile', error);
+      throw error;
     }
   };
-
+  const updateUserProfile = (updatedProfile) => {
+    setProfile(updatedProfile);
+    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+  };
   useEffect(() => {
     const savedProfile = localStorage.getItem('userProfile');
     if (savedProfile) {
@@ -106,8 +114,12 @@ export const AuthContextProvider = ({ children }) => {
     logout,
     loading,
     loginUser,
+    updateUserProfile,
     signUpNewUser,
     signOut,
+    setLoading,
+    isAuthenticated: !!session,
+    userId: session?.user?.id || null,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

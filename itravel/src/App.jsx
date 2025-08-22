@@ -12,27 +12,52 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthContextProvider } from './contexts/AuthContext';
 import ProfileCompletition from './pages/ProfileCompletition';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthContextProvider>
         <Routes>
-          <Route path='/profile' element={<ProfileCompletition />} /> *
           <Route path='/register' element={<Register />} />
           <Route path='/login' element={<Login />} />
-          <Route element={<DefaultLayout />}>
+
+          <Route
+            element={
+              <ProtectedRoute>
+                <DefaultLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path='/profile' element={<ProfileCompletition />} />
             <Route path='/' element={<HomePage />}></Route>
             <Route path='/travel/add' element={<NewTravel />} />
             <Route path='/travel' element={<MyTravels />}></Route>
             <Route path='add/:travelId/new-page' element={<NewPage />}></Route>
           </Route>
-          <Route element={<TravelDetailLayout />}>
-            <Route path='/details/:travelId' element={<TravelDetail />}></Route>
+          <Route
+            element={
+              <ProtectedRoute>
+                <TravelDetailLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route
+              path='/details/:travelId'
+              element={
+                <ProtectedRoute>
+                  <TravelDetail />
+                </ProtectedRoute>
+              }
+            ></Route>
           </Route>
           <Route
             path='/travel/:travelId/page/:pageId'
-            element={<Page />}
+            element={
+              <ProtectedRoute>
+                <Page />
+              </ProtectedRoute>
+            }
           ></Route>
         </Routes>
       </AuthContextProvider>
