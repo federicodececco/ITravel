@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function ProtectedRoute({ children, requireProfile = false }) {
   const { session, profile, loading, setLoading, isAuthenticated } = UserAuth();
   const location = useLocation();
-  console.log(isAuthenticated);
+
   if (loading) {
     return (
       <div className='flex items-center justify-center min-h-screen'>

@@ -232,6 +232,24 @@ export const getPublicUrl = (path) => {
 };
 
 /* crud travels*/
+export const getTravelByUserId = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('travels')
+      .select('*')
+      .eq('profile_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Errore query database:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Errore recupero viaggi:', error);
+    throw error;
+  }
+};
 
 export const createTravel = async (travelData) => {
   try {

@@ -7,6 +7,7 @@ export const AuthContextProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(null);
 
   const signUpNewUser = async (email, password) => {
     console.log('email:', email, 'password:', password);
@@ -68,7 +69,9 @@ export const AuthContextProvider = ({ children }) => {
 
   const fetchSession = async () => {
     const currentSession = await supabase.auth.getSession();
+    const currentUser = await supabase.auth.getUser();
     setSession(currentSession.data.session);
+    setUser(currentUser);
   };
 
   const fetchProfile = async (userId) => {
@@ -112,6 +115,7 @@ export const AuthContextProvider = ({ children }) => {
   }, []);
   const value = {
     session,
+    user,
     profile,
     logout,
     loading,

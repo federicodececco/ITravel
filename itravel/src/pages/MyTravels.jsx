@@ -1,19 +1,21 @@
 import { viaggi } from '../../data/places';
 import { useBreakpoint } from '../hooks/useScreenSize';
 import { useNavigate } from 'react-router';
-import { getTravels } from '../lib/supabase';
+import { getTravelByUserId } from '../lib/supabase';
 import { useEffect, useState } from 'react';
+import { UserAuth } from '../contexts/AuthContext';
 export default function MyTravels() {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const [travels, setTravels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { session } = UserAuth();
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const loadTravels = async () => {
     try {
       setLoading(true);
-      const data = await getTravels();
+      const data = await getTravelByUserId(session.user.id);
       setTravels(data || []);
     } catch (err) {
       console.error('errore caricamento viaggi', err);
