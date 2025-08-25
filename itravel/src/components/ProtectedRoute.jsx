@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 export default function ProtectedRoute({ children, requireProfile = false }) {
   const { session, profile, loading, setLoading, isAuthenticated } = UserAuth();
   const location = useLocation();
+  const savedProfile = localStorage.getItem('userProfile');
 
   if (loading) {
     return (
@@ -13,7 +14,7 @@ export default function ProtectedRoute({ children, requireProfile = false }) {
       </div>
     );
   }
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !savedProfile) {
     return <Navigate to='/login' state={{ from: location }} replace />;
   }
   if (isAuthenticated) {

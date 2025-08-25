@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { UserAuth } from '../contexts/AuthContext';
-import { supabase, updateProfile, uploadAvatarImage } from '../lib/supabase';
+import {
+  getProfile,
+  supabase,
+  updateProfile,
+  uploadAvatarImage,
+} from '../lib/supabase';
 
 export default function ProfileCompletition() {
   const [formData, setFormData] = useState({
@@ -12,9 +17,29 @@ export default function ProfileCompletition() {
   const [avatarImage, setAvatarImage] = useState(null);
   const [avatarPrev, setAvatarPrev] = useState(null);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [avatarUrlOld, setAvatarUrlOld] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const { session } = UserAuth();
+
   const navigate = useNavigate();
+
+  const fetchProfile = async (userId) => {
+    try {
+      setIsLoading(true);
+      const data = await getProfile(userId);
+
+      if (data.avatar_url) {
+        setAvatarUrlOld(data.avatarUrlOld);
+      }
+      formData.firstName = data.first_name ? data.first_name : null;
+      formData.lastName = data.last_name ? data.last_name : null;
+      formData.username = data.username ? data.username : null;
+      setIsLoading(false);
+    } catch (error) {
+      console.error('errore fetching profilo');
+      throw error;
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -58,7 +83,7 @@ export default function ProfileCompletition() {
       }
       const profileData = {
         ...formData,
-        avatarUrl: avatarUrlRes,
+        avatarUrl: avatarUrlOld ? avatarUrlOld : avatarUrlRes,
       };
       console.log('profileData', profileData, 'user', session.user.id);
 
@@ -66,12 +91,22 @@ export default function ProfileCompletition() {
       console.log('funzia');
       navigate('/');
     } catch (error) {
-      console.error('Errore', err);
+      console.error('Errore', error);
       setError('Errore durante l update. Riprova.');
     } finally {
       setIsLoading(false);
     }
   };
+  useEffect(() => {
+    fetchProfile(session.user.id);
+  }, []);
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900'></div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]'>
@@ -95,9 +130,9 @@ export default function ProfileCompletition() {
           <div className='flex flex-col items-center mb-6'>
             <div className='relative'>
               <div className='w-24 h-24 rounded-full overflow-hidden bg-gray-300 border-4 border-gray-400'>
-                {avatarPrev ? (
+                {avatarUrlOld ? (
                   <img
-                    src={avatarPrev}
+                    src={avatarUrlOld}
                     alt='Avatar preview'
                     className='w-full h-full object-cover'
                   />
