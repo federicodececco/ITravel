@@ -14,7 +14,7 @@ export const updateProfile = async (profileData, userId) => {
         first_name: profileData.firstName,
         last_name: profileData.lastName,
         username: profileData.username,
-        avatar_url: profileData.avatarUrl,
+        avatar_url: profileData.avatar_url,
       })
       .select()
       .eq('id', userId);

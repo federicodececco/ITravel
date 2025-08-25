@@ -28,7 +28,7 @@ export default function MyTravels() {
     loadTravels();
   }, []);
   return (
-    <div className=' lg:my-20 gap-2 lg:mx-40 grid lg:grid-cols-3 lg:gap-4 relative mb-10 '>
+    <div className=' lg:my-20 gap-2 lg:mx-40 grid lg:grid-cols-3 lg:gap-4 relative mb-10 font-[Playfair_Display]'>
       {travels.map((elem) => {
         return (
           <div

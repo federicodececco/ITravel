@@ -21,9 +21,7 @@ export default function DefaultLayout() {
       </>
     );
   }
-  if (isTablet) {
-    return <div>ciao</div>;
-  }
+
   return (
     <>
       <div className='relative bg-[#1e1e1e]'>

@@ -27,13 +27,15 @@ export default function ProfileCompletition() {
     try {
       setIsLoading(true);
       const data = await getProfile(userId);
+      setFormData({
+        firstName: data.first_name || '',
+        lastName: data.last_name || '',
+        username: data.username || '',
+      });
 
       if (data.avatar_url) {
-        setAvatarUrlOld(data.avatarUrlOld);
+        setAvatarUrlOld(data.avatar_url);
       }
-      formData.firstName = data.first_name ? data.first_name : null;
-      formData.lastName = data.last_name ? data.last_name : null;
-      formData.username = data.username ? data.username : null;
       setIsLoading(false);
     } catch (error) {
       console.error('errore fetching profilo');
@@ -49,16 +51,7 @@ export default function ProfileCompletition() {
     setError('');
   };
 
-  const handleAvatarUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({
-        ...formData,
-        avatarUrl: URL.createObjectURL(file),
-      });
-    }
-  };
-  const handelAvatarChange = (e) => {
+  const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setAvatarImage(file);
@@ -73,33 +66,43 @@ export default function ProfileCompletition() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(false);
+    setError('');
     try {
-      let avatarUrlRes = null;
+      let avatarUrlRes = avatarUrlOld;
+
+      // Se c'è una nuova immagine da caricare
       if (avatarImage) {
         const uploadResult = await uploadAvatarImage(avatarImage, 'avatars');
-        console.log('succeso upload immagine', uploadResult.publicUrl);
+        console.log('successo upload immagine', uploadResult.publicUrl);
+        // Aggiorna l'URL con quello della nuova immagine caricata
         avatarUrlRes = uploadResult.publicUrl;
       }
+
       const profileData = {
-        ...formData,
-        avatarUrl: avatarUrlOld ? avatarUrlOld : avatarUrlRes,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        username: formData.username.toLowerCase(), // Converte in minuscolo
+        avatar_url: avatarUrlRes, // Usa il nome campo corretto
       };
       console.log('profileData', profileData, 'user', session.user.id);
 
       const updatedProfile = await updateProfile(profileData, session.user.id);
-      console.log('funzia');
+      console.log('Profilo aggiornato con successo');
       navigate('/');
     } catch (error) {
       console.error('Errore', error);
-      setError('Errore durante l update. Riprova.');
+      setError("Errore durante l'aggiornamento. Riprova.");
     } finally {
       setIsLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchProfile(session.user.id);
-  }, []);
+    if (session?.user?.id) {
+      fetchProfile(session.user.id);
+    }
+  }, [session]);
+
   if (isLoading) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
@@ -130,10 +133,17 @@ export default function ProfileCompletition() {
           <div className='flex flex-col items-center mb-6'>
             <div className='relative'>
               <div className='w-24 h-24 rounded-full overflow-hidden bg-gray-300 border-4 border-gray-400'>
-                {avatarUrlOld ? (
+                {/* Mostra prima la preview della nuova immagine, poi quella vecchia */}
+                {avatarPrev ? (
+                  <img
+                    src={avatarPrev}
+                    alt='Avatar preview'
+                    className='w-full h-full object-cover'
+                  />
+                ) : avatarUrlOld ? (
                   <img
                     src={avatarUrlOld}
-                    alt='Avatar preview'
+                    alt='Avatar attuale'
                     className='w-full h-full object-cover'
                   />
                 ) : (
@@ -152,7 +162,7 @@ export default function ProfileCompletition() {
                 type='file'
                 id='avatar'
                 accept='image/*'
-                onChange={handelAvatarChange}
+                onChange={handleAvatarChange}
                 className='hidden'
                 disabled={isLoading}
               />

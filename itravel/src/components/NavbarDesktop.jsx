@@ -33,7 +33,7 @@ export default function NavbarDesktop() {
 
   return (
     <>
-      <nav className=' fixed  top-3 left-4 right-4 mb-4 z-100'>
+      <nav className=' fixed  top-3 left-4 right-4 mb-4 z-100 font-[Playfair_Display]'>
         <div className='navbar  bg-base-100/90 shadow-md  rounded-2xl'>
           <div className='flex-1'>
             <a className='btn btn-ghost text-xl' href='/'>
@@ -47,6 +47,10 @@ export default function NavbarDesktop() {
               className='input input-bordered w-80'
             />
           </div>
+          <div className='pr-4'>
+            {isLoading ? '' : profile?.username ? profile.username : ''}
+          </div>
+
           <div className=' gap-2'>
             <div className='dropdown dropdown-end'>
               <div
@@ -83,18 +87,23 @@ export default function NavbarDesktop() {
                 className='menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow'
               >
                 <li>
+                  <a href='/'>
+                    <i className='fa-solid fa-house'></i>Home
+                  </a>
+                </li>
+                <li>
                   <a href='/profile'>
-                    <i class='fa-solid fa-user'></i> Profilo
+                    <i className='fa-solid fa-user'></i> Profilo
                   </a>
                 </li>
                 <li>
                   <a href='/travel'>
-                    <i class='fa-solid fa-road'></i> I miei Viaggi
+                    <i className='fa-solid fa-road'></i> I miei Viaggi
                   </a>
                 </li>
                 <li>
                   <a>
-                    <i class='fa-solid fa-gear'></i> impostazioni
+                    <i className='fa-solid fa-gear'></i> impostazioni
                   </a>
                 </li>
 
