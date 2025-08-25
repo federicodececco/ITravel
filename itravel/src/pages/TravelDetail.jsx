@@ -1,73 +1,46 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
-import { getTravelById, getPagesByTravelId } from '../lib/supabase';
+import { getTravelById, getPagesByTravelId, supabase } from '../lib/supabase';
 
-const fintoViaggio = {
-  id: 1,
-  title: 'Viaggio a Roma',
-  description:
-    'Un incredibile viaggio nella città eterna, tra storia, arte e cucina. Abbiamo esplorato i monumenti più famosi, gustato la cucina locale e vissuto momenti indimenticabili tra le strade di Roma.',
-  coverImage: '/placeholder.png',
-  startDate: '2024-08-15',
-  endDate: '2024-08-20',
-  location: 'Roma, Italia',
-  pages: [
-    {
-      id: 1,
-      title: 'Primo giorno - Colosseo',
-      description:
-        "Oggi abbiamo visitato il Colosseo e il Foro Romano. Un'esperienza incredibile immergersi nella storia di questa città eterna. La mattina era soleggiata e perfetta per camminare tra le rovine antiche...",
-      coverImage: '/placeholder.png',
-      date: '2024-08-15',
-    },
-    {
-      id: 2,
-      title: 'Secondo giorno - Vaticano',
-      description:
-        "Giornata dedicata alla Città del Vaticano. Abbiamo visitato i Musei Vaticani, la Cappella Sistina e la Basilica di San Pietro. L'arte e la spiritualità di questi luoghi sono davvero mozzafiato...",
-      coverImage: '/placeholder.png',
-      date: '2024-08-16',
-    },
-    {
-      id: 3,
-      title: 'Terzo giorno - Trastevere',
-      description:
-        "Esplorazione del caratteristico quartiere di Trastevere. Abbiamo passeggiato tra i vicoli medievali, gustato la cucina tradizionale romana e goduto dell'atmosfera bohémien del quartiere...",
-      coverImage: '/placeholder.png',
-      date: '2024-08-17',
-    },
-    {
-      id: 4,
-      title: 'Quarto giorno - Fontana di Trevi',
-      description:
-        'Giornata tra le fontane e le piazze più belle di Roma. Fontana di Trevi, Piazza di Spagna, Pantheon. Ogni angolo racconta una storia millenaria...',
-      coverImage: '/placeholder.png',
-      date: '2024-08-18',
-    },
-    {
-      id: 5,
-      title: 'Ultimo giorno - Villa Borghese',
-      description:
-        'Ultima giornata rilassante a Villa Borghese. Abbiamo visitato la Galleria Borghese e fatto una passeggiata nel parco prima di salutare questa meravigliosa città...',
-      coverImage: '/placeholder.png',
-      date: '2024-08-19',
-    },
-  ],
-};
 export default function TravelDetail() {
   const { travelId } = useParams();
   const navigate = useNavigate();
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
-
   const [travel, setTravel] = useState(null);
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [auth, setAuth] = useState(false);
 
   useEffect(() => {
     loadTravelData();
   }, [travelId]);
+
+  const isAuthor = async (userId) => {
+    try {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error('Errore nel recupero utente:', error);
+        setAuth(false);
+        return;
+      }
+
+      if (user && user.id === userId) {
+        setAuth(true);
+      } else {
+        setAuth(false);
+      }
+    } catch (error) {
+      console.error('Errore nella verifica autore:', error);
+      setAuth(false);
+    }
+  };
+
   const loadTravelData = async () => {
     try {
       setLoading(true);
@@ -78,8 +51,9 @@ export default function TravelDetail() {
         getTravelById(travelId),
         getPagesByTravelId(travelId),
       ]);
-
+      isAuthor(travelData.profile_id);
       setTravel(travelData);
+
       setPages(pagesData);
     } catch (err) {
       console.error('Errore caricamento dati:', err);
@@ -283,17 +257,19 @@ export default function TravelDetail() {
         </div>
 
         {/* Pulsante aggiungi pagina */}
-        <div className='text-center pb-20 md:pb-0'>
-          <button
-            onClick={() => navigate(`/add/${travelId}/new-page`)}
-            className='bg-[#e6d3b3] hover:bg-[#d4c49a] text-gray-800 font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'
-          >
-            <i className='fa-solid fa-plus mr-2'></i>
-            {pages.length > 0
-              ? 'Aggiungi nuova pagina'
-              : 'Crea la prima pagina'}
-          </button>
-        </div>
+        {auth && (
+          <div className='text-center pb-20 md:pb-0'>
+            <button
+              onClick={() => navigate(`/add/${travelId}/new-page`)}
+              className='bg-[#e6d3b3] hover:bg-[#d4c49a] text-gray-800 font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'
+            >
+              <i className='fa-solid fa-plus mr-2'></i>
+              {pages.length > 0
+                ? 'Aggiungi nuova pagina'
+                : 'Crea la prima pagina'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

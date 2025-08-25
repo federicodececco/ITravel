@@ -92,13 +92,13 @@ export default function NavbarDesktop() {
                   </a>
                 </li>
                 <li>
-                  <a href='/profile'>
-                    <i className='fa-solid fa-user'></i> Profilo
+                  <a href='/travel'>
+                    <i className='fa-solid fa-road'></i> I miei Viaggi
                   </a>
                 </li>
                 <li>
-                  <a href='/travel'>
-                    <i className='fa-solid fa-road'></i> I miei Viaggi
+                  <a href='/profile'>
+                    <i className='fa-solid fa-user'></i> Profilo
                   </a>
                 </li>
                 <li>

@@ -307,7 +307,7 @@ export const getTravelById = async (travelId) => {
       .select()
       .eq('id', travelId)
       .single();
-    console.log(data);
+
     if (error) throw error;
     return data;
   } catch (error) {
