@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-
+import AIStatus from '../components/StatusAi';
 import Map from '../components/Map';
 import { getTravels } from '../lib/supabase';
 import { useNavigate } from 'react-router';
@@ -44,6 +44,9 @@ export default function HomePage() {
   return (
     <>
       <div className='lg:pt-25 min-h-screen'>
+        <div>
+          <AIStatus></AIStatus>
+        </div>
         <div className='  gap-2 lg:mx-40 grid lg:grid-cols-3 lg:gap-4 relative mb-10 font-[Playfair_Display]'>
           {travels.map((elem) => {
             return (
