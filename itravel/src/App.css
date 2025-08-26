@@ -1,2 +1,15 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @plugin "daisyui";
+
+html,
+textarea,
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}

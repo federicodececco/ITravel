@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
 import { UserAuth } from '../contexts/AuthContext';
 import { createPage, uploadImage, uploadMultipleImages } from '../lib/supabase';
-
+import DescriptionGenerator from '../components/DescriptionGenerator';
+import { MapPin, MapPinCheck } from 'lucide-react';
 export default function NewPage() {
   const defaultFormState = {
     title: '',
@@ -79,6 +80,13 @@ export default function NewPage() {
     }
   };
 
+  const handleDescription = (description) => {
+    setFormData((prev) => ({
+      ...prev,
+      description: description,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -134,7 +142,7 @@ export default function NewPage() {
   };
 
   return (
-    <section className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]  overflow-y-auto md:pt-20 pb-24 md:pb-0 '>
+    <section className='min-h-screen  bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]   md:pt-20 pb-24 md:pb-0 '>
       <div className=' w-full max-w-md sm:max-w-lg md:max-w-xl bg-[#e6d3b3] rounded-2xl p-4 sm:p-6 shadow-lg text-lg text-black bg-[url(/test-bg.jpeg)] relative'>
         {/* filtro colorato per cercare di fare un blend delle immagini di palceholder (scarsi risultati) */}
         <div className='absolute inset-0 bg-[#e6d3b3] opacity-40 mix-blend-multiply'></div>
@@ -175,6 +183,16 @@ export default function NewPage() {
                 aria-label='Descrizione della giornata'
                 className='w-full pr-2 pl-4 pt-2 pb-8 rounded-xl border-2 border-black text-base sm:text-lg resize-y min-h-[120px]'
               ></textarea>
+            </div>
+
+            <div className=''>
+              <DescriptionGenerator
+                type='page'
+                pageData={{ title: formData.title, location: location }}
+                currentDescription={formData.description}
+                onDescriptionGenerated={handleDescription}
+                disabled={isLoading}
+              ></DescriptionGenerator>
             </div>
 
             <div>
@@ -240,7 +258,7 @@ export default function NewPage() {
               </div>
             </div>
 
-            <div className='flex justify-between pt-4'>
+            <div className='flex justify-between pt-4 gap-4'>
               <button
                 type='button'
                 onClick={handleCancel}
@@ -254,7 +272,7 @@ export default function NewPage() {
                   type='button'
                   className='border bg-[#e6d3b3] border-black py-2 px-4 rounded hover:bg-gray-300 text-sm sm:text-base'
                 >
-                  Aggiungi posizione
+                  <MapPin />
                 </button>
               )}
               {location && (
@@ -263,7 +281,7 @@ export default function NewPage() {
                   type='button'
                   className='border bg-[#e6d3b3] border-black py-2 px-4 rounded hover:bg-gray-300 text-sm sm:text-base'
                 >
-                  Rimuovi posizione
+                  <MapPinCheck />
                 </button>
               )}
 
