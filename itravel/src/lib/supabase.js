@@ -279,7 +279,13 @@ export const createTravel = async (travelData) => {
 };
 export const getTravels = async () => {
   try {
-    let query = supabase.from('travels').select('*');
+    let query = supabase.from('travels').select(`
+        *,
+        profiles (
+          username,
+          avatar_url
+        )
+      `);
 
     /*  if (userId) {
       query = query.eq('user_id', userId);
