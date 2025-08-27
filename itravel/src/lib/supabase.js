@@ -251,6 +251,82 @@ export const getTravelByUserId = async (userId) => {
   }
 };
 
+export const searchTravels = async (searchQuery, options = {}) => {
+  try {
+    const { limit = 50 } = options;
+
+    let query = supabase.from('travels').select(`
+      *,
+      profiles (
+        username,
+        avatar_url,
+        first_name,
+        last_name
+      )
+    `);
+
+    if (!searchQuery || !searchQuery.trim()) {
+      const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data || [];
+    }
+
+    const trimmedQuery = searchQuery.trim();
+
+    const escapedQuery = trimmedQuery.replace(/[%_]/g, '\\$&');
+    const searchPattern = `%${escapedQuery}%`;
+
+    query = query.or(
+      `title.ilike.${searchPattern},description.ilike.${searchPattern},place.ilike.${searchPattern}`,
+    );
+
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Errore query ricerca viaggi:', error);
+      throw error;
+    }
+
+    const results = data || [];
+
+    const sortedResults = results.sort((a, b) => {
+      const queryLower = trimmedQuery.toLowerCase();
+
+      let scoreA = 0,
+        scoreB = 0;
+
+      if (a.title && a.title.toLowerCase().includes(queryLower)) {
+        scoreA += 10;
+        if (a.title.toLowerCase().startsWith(queryLower)) scoreA += 5;
+      }
+      if (b.title && b.title.toLowerCase().includes(queryLower)) {
+        scoreB += 10;
+        if (b.title.toLowerCase().startsWith(queryLower)) scoreB += 5;
+      }
+
+      if (a.place && a.place.toLowerCase().includes(queryLower)) scoreA += 7;
+      if (b.place && b.place.toLowerCase().includes(queryLower)) scoreB += 7;
+
+      if (a.description && a.description.toLowerCase().includes(queryLower))
+        scoreA += 3;
+      if (b.description && b.description.toLowerCase().includes(queryLower))
+        scoreB += 3;
+
+      return scoreB - scoreA;
+    });
+
+    return sortedResults;
+  } catch (error) {
+    console.error('Errore ricerca viaggi:', error);
+    throw new Error('Errore durante la ricerca dei viaggi');
+  }
+};
+
 export const createTravel = async (travelData) => {
   try {
     const orderedData = {

@@ -11,57 +11,59 @@ import NewTravel from './pages/NewTravel';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthContextProvider } from './contexts/AuthContext';
+import { SearchProvider } from './contexts/SearchContext';
 import ProfileCompletition from './pages/ProfileCompletition';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthContextProvider>
-        <Routes>
-          <Route path='/register' element={<Register />} />
-          <Route path='/login' element={<Login />} />
+    <AuthContextProvider>
+      <SearchProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Route pubbliche (senza SearchProvider necessario) */}
+            <Route path='/register' element={<Register />} />
+            <Route path='/login' element={<Login />} />
 
-          <Route
-            element={
-              <ProtectedRoute>
-                <DefaultLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path='/profile' element={<ProfileCompletition />} />
-            <Route path='/' element={<HomePage />}></Route>
-            <Route path='/travel/add' element={<NewTravel />} />
-            <Route path='/travel' element={<MyTravels />}></Route>
-            <Route path='add/:travelId/new-page' element={<NewPage />}></Route>
-          </Route>
-          <Route
-            element={
-              <ProtectedRoute>
-                <TravelDetailLayout />
-              </ProtectedRoute>
-            }
-          >
+            {/* Route protette con DefaultLayout (che include NavbarDesktop) */}
             <Route
-              path='/details/:travelId'
               element={
                 <ProtectedRoute>
-                  <TravelDetail />
+                  <DefaultLayout />
                 </ProtectedRoute>
               }
-            ></Route>
-          </Route>
-          <Route
-            path='/travel/:travelId/page/:pageId'
-            element={
-              <ProtectedRoute>
-                <Page />
-              </ProtectedRoute>
-            }
-          ></Route>
-        </Routes>
-      </AuthContextProvider>
-    </BrowserRouter>
+            >
+              <Route path='/profile' element={<ProfileCompletition />} />
+              <Route path='/' element={<HomePage />} />
+              <Route path='/travel/add' element={<NewTravel />} />
+              <Route path='/travel' element={<MyTravels />} />
+              <Route path='add/:travelId/new-page' element={<NewPage />} />
+            </Route>
+
+            {/* Route protette con TravelDetailLayout */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <TravelDetailLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path='/details/:travelId' element={<TravelDetail />} />
+            </Route>
+
+            {/* Route singole protette */}
+            <Route
+              path='/travel/:travelId/page/:pageId'
+              element={
+                <ProtectedRoute>
+                  <Page />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </SearchProvider>
+    </AuthContextProvider>
   );
 }
 

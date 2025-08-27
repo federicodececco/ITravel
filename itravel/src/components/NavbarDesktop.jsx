@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router';
-
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { UserAuth } from '../contexts/AuthContext';
+import { useSearch } from '../contexts/SearchContext';
 import {
   Search,
   Home,
@@ -11,6 +11,7 @@ import {
   LogOut,
   Plus,
   Bell,
+  X,
 } from 'lucide-react';
 
 export default function NavbarDesktop() {
@@ -19,8 +20,18 @@ export default function NavbarDesktop() {
   const location = useLocation();
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const {
+    searchQuery,
+    updateSearchQuery,
+    performSearch,
+    clearSearch,
+    isSearching,
+  } = useSearch();
+
+  const searchInputRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   const handleLogout = async () => {
     logout();
@@ -40,12 +51,54 @@ export default function NavbarDesktop() {
     setIsLoading(false);
   };
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
   const isActiveRoute = (path) => {
     return location.pathname === path;
   };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    updateSearchQuery(query);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      clearSearch();
+      searchInputRef.current?.blur();
+    } else if (event.key === 'Enter') {
+      if (location.pathname !== '/') {
+        navigate('/');
+      }
+      searchInputRef.current?.blur();
+    }
+  };
+
+  const handleClearSearch = () => {
+    clearSearch();
+    if (location.pathname !== '/') {
+      navigate('/');
+    }
+    searchInputRef.current?.focus();
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
 
   return (
     <nav className='fixed top-4 left-4 right-4 z-50 font-[Playfair_Display]'>
@@ -53,7 +106,13 @@ export default function NavbarDesktop() {
         <div className='flex items-center justify-between px-6 py-4'>
           <div className='flex items-center'>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => {
+                navigate('/');
+
+                if (searchQuery) {
+                  performSearch(searchQuery);
+                }
+              }}
               className='text-2xl font-bold text-gray-800 hover:text-gray-900 transition-colors'
             >
               ITravel
@@ -62,7 +121,13 @@ export default function NavbarDesktop() {
 
           <div className='hidden md:flex items-center space-x-6'>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => {
+                navigate('/');
+
+                if (searchQuery) {
+                  performSearch(searchQuery);
+                }
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all ${
                 isActiveRoute('/')
                   ? 'bg-gray-800 text-[#e6d3b3] shadow-md'
@@ -74,7 +139,10 @@ export default function NavbarDesktop() {
             </button>
 
             <button
-              onClick={() => navigate('/travel')}
+              onClick={() => {
+                clearSearch();
+                navigate('/travel');
+              }}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all ${
                 isActiveRoute('/travel')
                   ? 'bg-gray-800 text-[#e6d3b3] shadow-md'
@@ -86,20 +154,46 @@ export default function NavbarDesktop() {
             </button>
           </div>
 
-          <div className='flex-1 max-w-md mx-6'>
+          <div className='flex-1 max-w-md mx-6 relative'>
             <div className='relative'>
               <Search
                 className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500'
                 size={20}
               />
               <input
+                ref={searchInputRef}
                 type='text'
                 placeholder='Cerca viaggi, destinazioni...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className='w-full pl-10 pr-4 py-2 bg-white border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-gray-800 placeholder-gray-500'
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+                className='w-full pl-10 pr-12 py-2 bg-white border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-gray-800 placeholder-gray-500 transition-colors'
               />
+
+              <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
+                {isSearching ? (
+                  <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500'></div>
+                ) : searchQuery ? (
+                  <button
+                    onClick={handleClearSearch}
+                    className='text-gray-500 hover:text-gray-700 transition-colors'
+                    title='Pulisci ricerca'
+                  >
+                    <X size={16} />
+                  </button>
+                ) : null}
+              </div>
             </div>
+
+            {searchQuery && location.pathname !== '/' && (
+              <div className='absolute top-full left-0 right-0 mt-1'>
+                <div className='bg-blue-50 border border-blue-200 rounded-lg p-2 text-center'>
+                  <span className='text-xs text-blue-600'>
+                    Premi Enter o clicca su Home per vedere i risultati
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className='flex items-center space-x-4'>
@@ -168,7 +262,10 @@ export default function NavbarDesktop() {
 
                   <div className='py-2'>
                     <button
-                      onClick={() => navigate('/profile')}
+                      onClick={() => {
+                        navigate('/profile');
+                        setShowProfileMenu(false);
+                      }}
                       className='w-full flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors'
                     >
                       <User size={16} />
@@ -176,7 +273,10 @@ export default function NavbarDesktop() {
                     </button>
 
                     <button
-                      onClick={() => navigate('/settings')}
+                      onClick={() => {
+                        navigate('/settings');
+                        setShowProfileMenu(false);
+                      }}
                       className='w-full flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors'
                     >
                       <Settings size={16} />
