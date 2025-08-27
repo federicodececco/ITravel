@@ -27,7 +27,6 @@ export default function HomePage() {
     fetchTravel();
   }, []);
   const processedTravels = useMemo(() => {
-    console.log('Processing travels in useMemo:', travels);
     return travels.map((travel) => ({
       ...travel,
       username: travel?.profiles?.username || 'utente_sconosciuto',
@@ -42,9 +41,9 @@ export default function HomePage() {
       <>
         <div className='lg:pt-25 min-h-screen'>
           <div className='  gap-2 lg:mx-40 grid lg:grid-cols-3 lg:gap-4 relative mb-10 font-[Playfair_Display]'>
-            {loadArr.map((elem) => {
+            {loadArr.map((elem, index) => {
               return (
-                <div>
+                <div key={index}>
                   {' '}
                   <div className='skeleton lg:h-80 w-120'></div>{' '}
                 </div>
