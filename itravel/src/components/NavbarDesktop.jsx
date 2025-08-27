@@ -51,7 +51,6 @@ export default function NavbarDesktop() {
     <nav className='fixed top-4 left-4 right-4 z-50 font-[Playfair_Display]'>
       <div className='bg-[#e6d3b3]/90 backdrop-sepia-60 backdrop-blur-xs rounded-2xl shadow-lg border border-[#d4c49a]'>
         <div className='flex items-center justify-between px-6 py-4'>
-          {/* Logo */}
           <div className='flex items-center'>
             <button
               onClick={() => navigate('/')}
@@ -61,7 +60,6 @@ export default function NavbarDesktop() {
             </button>
           </div>
 
-          {/* Navigazione centrale */}
           <div className='hidden md:flex items-center space-x-6'>
             <button
               onClick={() => navigate('/')}
@@ -88,7 +86,6 @@ export default function NavbarDesktop() {
             </button>
           </div>
 
-          {/* Search Bar */}
           <div className='flex-1 max-w-md mx-6'>
             <div className='relative'>
               <Search
@@ -105,9 +102,7 @@ export default function NavbarDesktop() {
             </div>
           </div>
 
-          {/* Azioni utente */}
           <div className='flex items-center space-x-4'>
-            {/* Pulsante aggiungi viaggio */}
             <button
               onClick={() => navigate('/travel/add')}
               className='bg-gray-800 hover:bg-gray-900 text-[#e6d3b3] p-2 rounded-xl transition-all hover:scale-105 shadow-md'
@@ -116,12 +111,10 @@ export default function NavbarDesktop() {
               <Plus size={20} />
             </button>
 
-            {/* Notifiche */}
             <button className='text-gray-700 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-200 transition-all'>
               <Bell size={20} />
             </button>
 
-            {/* Profilo utente */}
             <div className='relative'>
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -147,7 +140,6 @@ export default function NavbarDesktop() {
                 </span>
               </button>
 
-              {/* Menu dropdown profilo */}
               {showProfileMenu && (
                 <div className='absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 py-2 z-50'>
                   <div className='px-4 py-3 border-b border-gray-200'>
@@ -208,7 +200,6 @@ export default function NavbarDesktop() {
         </div>
       </div>
 
-      {/* Overlay per chiudere il menu */}
       {showProfileMenu && (
         <div
           className='fixed inset-0 z-40'

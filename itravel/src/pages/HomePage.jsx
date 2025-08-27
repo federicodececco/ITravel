@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getTravels } from '../lib/supabase';
 import { useNavigate } from 'react-router';
-import { useScreenSize } from '../hooks/useScreenSize';
+import { useBreakpoint } from '../hooks/useScreenSize';
 import { BookOpen, Plus, MapPin, Calendar } from 'lucide-react';
 const loadArr = [0, 0, 0, 0, 0, 0];
 export default function HomePage() {
-  const { isMobile, isTablet, isDesktop } = useScreenSize();
+  const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const [isLoading, setIsLoading] = useState(true);
   const [travels, setTravels] = useState([]);
   const navigate = useNavigate();
@@ -200,49 +200,29 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-
-              <div className='text-center'>
-                <div className='flex gap-4 justify-center flex-wrap'>
-                  <button
-                    onClick={() => navigate('/travel')}
-                    className='bg-[#e6d3b3] hover:bg-[#d4c49a] text-gray-800 font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3'
-                  >
-                    <BookOpen size={24} />I miei viaggi
-                  </button>
-                  <button
-                    onClick={() => navigate('/travel/add')}
-                    className='bg-black hover:bg-gray-800 text-[#e6d3b3] font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3'
-                  >
-                    <Plus size={24} />
-                    Condividi un viaggio
-                  </button>
+              {!isMobile && (
+                <div className='text-center'>
+                  <div className='flex gap-4 justify-center flex-wrap'>
+                    <button
+                      onClick={() => navigate('/travel')}
+                      className='bg-[#e6d3b3] hover:bg-[#d4c49a] text-gray-800 font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3'
+                    >
+                      <BookOpen size={24} />I miei viaggi
+                    </button>
+                    <button
+                      onClick={() => navigate('/travel/add')}
+                      className='bg-black hover:bg-gray-800 text-[#e6d3b3] font-bold py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-3'
+                    >
+                      <Plus size={24} />
+                      Condividi un viaggio
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>
       </div>
-
-      {isMobile && (
-        <div className='fixed bottom-20 right-6 z-40'>
-          <div className='flex flex-col gap-3'>
-            <button
-              onClick={() => navigate('/travel/add')}
-              className='bg-black hover:bg-gray-800 text-[#e6d3b3] p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110'
-              title='Condividi viaggio'
-            >
-              <Plus size={20} />
-            </button>
-            <button
-              onClick={() => navigate('/travel')}
-              className='bg-[#e6d3b3] hover:bg-[#d4c49a] text-gray-800 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110'
-              title='I miei viaggi'
-            >
-              <BookOpen size={20} />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

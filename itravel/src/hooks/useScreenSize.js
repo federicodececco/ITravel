@@ -31,12 +31,12 @@ export function useScreenSize(delay = 150) {
 
 export function useIsMobile() {
   const { width } = useScreenSize();
-  return width < 768;
+  return width <= 768;
 }
 
 export function useIsTablet() {
   const { width } = useScreenSize();
-  return width >= 768 && width < 1024;
+  return width > 768 && width < 1024;
 }
 
 export function useIsDesktop() {
