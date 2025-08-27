@@ -116,7 +116,7 @@ export default function TravelDetail() {
   }
 
   return (
-    <div className='min-h-screen bg-[#1e1e1e] font-[Playfair_Display]'>
+    <div className='min-h-screen bg-[#1e1e1e] font-[Playfair_Display] pb-20 md:pb-0'>
       {/* Header con immagine di copertina */}
       <div className='relative h-64 sm:h-80 lg:h-96 overflow-hidden'>
         <img
