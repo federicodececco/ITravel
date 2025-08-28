@@ -1,0 +1,43 @@
+{
+  "name": "ITravel - Diario di Viaggi Social",
+  "short_name": "ITravel",
+  "description": "Condividi e scopri avventure di viaggio con la community",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1e1e1e",
+  "background_color": "#e6d3b3",
+  "scope": "/",
+  "lang": "it-IT",
+  "categories": ["travel", "social", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home page dell'app ITravel"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "ITravel su desktop - Homepage"
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import {
   updateProfile,
   uploadAvatarImage,
 } from '../lib/supabase';
+import { LogOut } from 'lucide-react';
 
 export default function ProfileCompletition() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ export default function ProfileCompletition() {
     lastName: '',
     username: '',
   });
+  const { logout } = UserAuth();
   const [avatarImage, setAvatarImage] = useState(null);
   const [avatarPrev, setAvatarPrev] = useState(null);
   const [error, setError] = useState('');
@@ -43,6 +45,11 @@ export default function ProfileCompletition() {
     }
   };
 
+  const handleLogout = async () => {
+    logout();
+    navigate('/login');
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -70,19 +77,17 @@ export default function ProfileCompletition() {
     try {
       let avatarUrlRes = avatarUrlOld;
 
-      // Se c'è una nuova immagine da caricare
       if (avatarImage) {
         const uploadResult = await uploadAvatarImage(avatarImage, 'avatars');
         console.log('successo upload immagine', uploadResult.publicUrl);
-        // Aggiorna l'URL con quello della nuova immagine caricata
         avatarUrlRes = uploadResult.publicUrl;
       }
 
       const profileData = {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        username: formData.username.toLowerCase(), // Converte in minuscolo
-        avatar_url: avatarUrlRes, // Usa il nome campo corretto
+        username: formData.username.toLowerCase(),
+        avatar_url: avatarUrlRes,
       };
       console.log('profileData', profileData, 'user', session.user.id);
 
@@ -112,14 +117,14 @@ export default function ProfileCompletition() {
   }
 
   return (
-    <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]'>
+    <div className='min-h-screen bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display] md:pt-30 pb-30 '>
       <div className='w-full max-w-md bg-[#e6d3b3] rounded-2xl p-6 sm:p-8 shadow-lg'>
         <div className='text-center mb-8'>
           <h1 className='text-3xl sm:text-4xl font-bold text-gray-800 mb-2'>
-            Completa il Profilo
+            Modifica il Profilo
           </h1>
           <p className='text-gray-600 text-lg'>
-            Ultimi dettagli per iniziare il tuo viaggio
+            i dettagli per iniziare il tuo viaggio
           </p>
         </div>
 
@@ -133,7 +138,6 @@ export default function ProfileCompletition() {
           <div className='flex flex-col items-center mb-6'>
             <div className='relative'>
               <div className='w-24 h-24 rounded-full overflow-hidden bg-gray-300 border-4 border-gray-400'>
-                {/* Mostra prima la preview della nuova immagine, poi quella vecchia */}
                 {avatarPrev ? (
                   <img
                     src={avatarPrev}
@@ -244,14 +248,20 @@ export default function ProfileCompletition() {
             {isLoading ? (
               <div className='flex items-center justify-center'>
                 <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2'></div>
-                Creazione profilo...
+                Aggiornamento profilo...
               </div>
             ) : (
-              'Completa Registrazione'
+              'Aggiorna il profilo'
             )}
           </button>
         </form>
       </div>
+      <button
+        onClick={handleLogout}
+        className='absolute top-6 right-6 translate[50%] border p-2 rounded-3xl text-red-600 hover:bg-red-50 transition-colors'
+      >
+        <LogOut size={16} />
+      </button>
     </div>
   );
 }

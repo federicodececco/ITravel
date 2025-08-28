@@ -235,7 +235,7 @@ export default function NavbarDesktop() {
               </button>
 
               {showProfileMenu && (
-                <div className='absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 py-2 z-50'>
+                <div className='absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200 py-2 z-100'>
                   <div className='px-4 py-3 border-b border-gray-200'>
                     <div className='flex items-center space-x-3'>
                       <div className='w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden'>
@@ -300,12 +300,12 @@ export default function NavbarDesktop() {
         </div>
       </div>
 
-      {showProfileMenu && (
+      {/* {showProfileMenu && (
         <div
           className='fixed inset-0 z-40'
           onClick={() => setShowProfileMenu(false)}
         />
-      )}
+      )} */}
     </nav>
   );
 }

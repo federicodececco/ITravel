@@ -10,18 +10,6 @@ import {
 
 import Map from '../components/Map';
 
-const viaggio = {
-  id: 1,
-  title: 'Primo giorno a Roma',
-  description:
-    "Oggi abbiamo visitato il Colosseo e il Foro Romano. Un'esperienza incredibile immergersi nella storia di questa città eterna. La mattina era soleggiata e perfetta per camminare tra le rovine.",
-  coverImage: '/placeholder.png',
-  images: ['/placeholder.png', '/placeholder.png', '/placeholder.png'],
-  date: '2024-08-15',
-  longitude: '',
-  latitude: '',
-};
-
 export default function Page() {
   const { travelId, pageId } = useParams();
   const navigate = useNavigate();
