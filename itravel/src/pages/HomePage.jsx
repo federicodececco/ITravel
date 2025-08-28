@@ -1,16 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getTravels } from '../lib/supabase';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
 import { useSearch } from '../contexts/SearchContext';
-import { BookOpen, Plus, MapPin, Calendar, Search, X } from 'lucide-react';
+import { useCachedData } from '../hooks/useCache';
+import { getTravelsCached, invalidateCache } from '../lib/supabase-cache';
+import { BookOpen, Plus, MapPin, Search, X } from 'lucide-react';
 
 const loadArr = [0, 0, 0, 0, 0, 0];
 
 export default function HomePage() {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
-  const [isLoading, setIsLoading] = useState(true);
-  const [allTravels, setAllTravels] = useState([]);
   const navigate = useNavigate();
 
   const {
@@ -22,24 +21,47 @@ export default function HomePage() {
     clearSearch,
   } = useSearch();
 
+  const fetchAllTravels = () => getTravelsCached();
+
+  const {
+    data: cachedTravels,
+    loading: isCacheLoading,
+    error: cacheError,
+    refresh: refreshCache,
+  } = useCachedData('all-travels-homepage', fetchAllTravels, {
+    ttl: 3 * 60 * 1000, // 3 minuti
+    enableCache: true,
+    dependencies: [],
+  });
+
+  const allTravels = cachedTravels || [];
+
+  const isLoading = isCacheLoading && !cachedTravels;
+
   const displayTravels = hasSearched ? searchResults : allTravels;
 
-  const fetchTravel = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getTravels();
-      setAllTravels(data || []);
-    } catch (error) {
-      console.error("C'è stato un errore col fetching dei dati", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRefreshCache = () => {
+    invalidateCache.travels();
+    invalidateCache.searchResults();
+    refreshCache();
   };
 
   useEffect(() => {
-    fetchTravel();
-  }, []);
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !hasSearched) {
+        const lastRefresh = localStorage.getItem('homepage-last-refresh');
+        const now = Date.now();
+        if (!lastRefresh || now - parseInt(lastRefresh) > 5 * 60 * 1000) {
+          handleRefreshCache();
+          localStorage.setItem('homepage-last-refresh', now.toString());
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [hasSearched]);
 
   const processedTravels = useMemo(() => {
     return displayTravels.map((travel) => ({
@@ -282,7 +304,6 @@ export default function HomePage() {
                         {highlightText(travel.description, searchQuery)}
                       </p>
 
-                      {/* Informazioni aggiuntive */}
                       {travel.place && (
                         <div className='flex items-center gap-1 mb-2'>
                           <MapPin size={12} className='text-green-600' />
