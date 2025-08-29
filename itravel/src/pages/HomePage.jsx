@@ -1,17 +1,29 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
 import { useSearch } from '../contexts/SearchContext';
 import { useCachedData } from '../hooks/useCache';
-import { getTravelsCached, invalidateCache } from '../lib/supabase-cache';
-import { BookOpen, Plus, MapPin, Search, X } from 'lucide-react';
+/* import { getTravelsCached, invalidateCache } from '../lib/supabase-cache'; */
+import {
+  getTravelsCached,
+  invalidateCache,
+  getCacheStats,
+} from '../lib/supabase-redis';
+import {
+  BookOpen,
+  Plus,
+  MapPin,
+  Search,
+  X,
+  Database,
+  RefreshCw,
+} from 'lucide-react';
 
 const loadArr = [0, 0, 0, 0, 0, 0];
 
 export default function HomePage() {
   const { isMobile, isTablet, isDesktop } = useBreakpoint();
   const navigate = useNavigate();
-
   const {
     searchQuery,
     searchResults,
@@ -20,6 +32,9 @@ export default function HomePage() {
     searchError,
     clearSearch,
   } = useSearch();
+
+  const [cacheStats, setCacheStats] = useState(null);
+  const [showCacheInfo, setShowCacheInfo] = useState(false);
 
   const fetchAllTravels = () => getTravelsCached();
 
@@ -35,24 +50,60 @@ export default function HomePage() {
   });
 
   const allTravels = cachedTravels || [];
-
   const isLoading = isCacheLoading && !cachedTravels;
-
   const displayTravels = hasSearched ? searchResults : allTravels;
 
-  const handleRefreshCache = () => {
-    invalidateCache.travels();
-    invalidateCache.searchResults();
-    refreshCache();
+  useEffect(() => {
+    const loadCacheStats = async () => {
+      const stats = await getCacheStats();
+      setCacheStats(stats);
+    };
+    loadCacheStats();
+  }, []);
+
+  const handleRefreshCache = async () => {
+    try {
+      // Invalida tutti i cache
+      await invalidateCache.all();
+
+      // Refresh dei dati
+      await refreshCache();
+
+      // Aggiorna statistiche
+      const stats = await getCacheStats();
+      setCacheStats(stats);
+
+      console.log('🔄 Cache completamente aggiornato');
+    } catch (error) {
+      console.error('Errore refresh cache:', error);
+    }
   };
 
+  const handleHardRefresh = async () => {
+    try {
+      // Invalida cache Redis
+      await invalidateCache.all();
+
+      // Pulisce cache locale
+      localStorage.removeItem('homepage-last-refresh');
+
+      // Ricarica la pagina
+      window.location.reload();
+    } catch (error) {
+      console.error('Errore hard refresh:', error);
+    }
+  };
+
+  // Auto-refresh intelligente
   useEffect(() => {
-    const handleVisibilityChange = () => {
+    const handleVisibilityChange = async () => {
       if (!document.hidden && !hasSearched) {
         const lastRefresh = localStorage.getItem('homepage-last-refresh');
         const now = Date.now();
+
+        // Refresh ogni 5 minuti
         if (!lastRefresh || now - parseInt(lastRefresh) > 5 * 60 * 1000) {
-          handleRefreshCache();
+          await handleRefreshCache();
           localStorage.setItem('homepage-last-refresh', now.toString());
         }
       }
@@ -101,7 +152,14 @@ export default function HomePage() {
       <div className='lg:pt-25 min-h-screen'>
         <div className='gap-2 lg:mx-40 grid lg:grid-cols-3 lg:gap-4 relative mb-10 font-[Playfair_Display]'>
           {loadArr.map((elem, index) => (
-            <div key={index} className='skeleton lg:h-80 w-120'></div>
+            <div key={index} className='skeleton lg:h-80 w-120'>
+              <div className='h-48 bg-gray-300 rounded-t-2xl animate-pulse'></div>
+              <div className='p-6 space-y-4'>
+                <div className='h-4 bg-gray-300 rounded w-3/4 animate-pulse'></div>
+                <div className='h-3 bg-gray-300 rounded w-full animate-pulse'></div>
+                <div className='h-3 bg-gray-300 rounded w-5/6 animate-pulse'></div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -169,9 +227,12 @@ export default function HomePage() {
               </div>
             ) : (
               <div>
-                <h1 className='text-4xl md:text-6xl font-bold text-[#e6d3b3] mb-4'>
-                  Scopri il Mondo
-                </h1>
+                <div className='flex items-center justify-center gap-3 mb-4'>
+                  <h1 className='text-4xl md:text-6xl font-bold text-[#e6d3b3]'>
+                    Scopri il Mondo
+                  </h1>
+                </div>
+
                 <p className='text-lg md:text-xl text-[#e6d3b3]/80 max-w-2xl mx-auto'>
                   Esplora le avventure di altri viaggiatori e lasciati ispirare
                   per la tua prossima destinazione

@@ -18,8 +18,6 @@ export default function DockBar() {
     } else if (path === '/travel') {
       handleCloseMobileSearch();
       setActiveItem(2);
-    } else if (path.includes('/search')) {
-      setActiveItem(0);
     } else if (path.includes('/profile')) {
       handleCloseMobileSearch();
       setActiveItem(3);
