@@ -329,30 +329,78 @@ export const searchTravels = async (searchQuery, options = {}) => {
 
 export const createTravel = async (travelData) => {
   try {
+    if (!travelData.title?.trim()) {
+      throw new Error('Il titolo è obbligatorio');
+    }
+
+    if (!travelData.location?.trim()) {
+      throw new Error('La destinazione è obbligatoria');
+    }
+
+    if (!travelData.user_id) {
+      throw new Error('Utente non autenticato');
+    }
+
+    // Validazione date
+    if (travelData.startDate && !isValidDate(travelData.startDate)) {
+      throw new Error('Data di inizio non valida');
+    }
+
+    if (travelData.endDate && !isValidDate(travelData.endDate)) {
+      throw new Error('Data di fine non valida');
+    }
+
+    if (travelData.startDate && travelData.endDate) {
+      if (new Date(travelData.endDate) < new Date(travelData.startDate)) {
+        throw new Error(
+          'La data di fine non può essere precedente a quella di inizio',
+        );
+      }
+    }
+
     const orderedData = {
-      cover_image: travelData.coverImage,
-      description: travelData.description,
-      start_date: travelData.startDate,
-      place: travelData.location,
-      title: travelData.title,
+      title: travelData.title.trim(),
+      description: travelData.description?.trim() || null,
+      place: travelData.location.trim(),
+      cover_image: travelData.coverImage || null,
+      start_date: travelData.startDate || null,
+      end_date: travelData.endDate || null,
       profile_id: travelData.user_id,
     };
-    if (travelData.endDate != '') {
-      orderedData.end_date = travelData.endDate;
-    }
 
     const { data, error } = await supabase
       .from('travels')
       .insert([orderedData])
       .select()
       .single();
-    if (error) throw error;
+
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error('Esiste già un viaggio con questo titolo');
+      }
+      if (error.code === '23503') {
+        throw new Error('Errore di riferimento utente');
+      }
+      if (error.code === '23514') {
+        throw new Error('Dati non validi secondo le regole del database');
+      }
+
+      console.error('Errore Supabase:', error);
+      throw new Error('Errore durante la creazione del viaggio');
+    }
+
     return data;
   } catch (error) {
-    console.error('errore creazione del viaggio con supabase', error);
+    console.error('Errore creazione viaggio:', error);
     throw error;
   }
 };
+
+const isValidDate = (dateString) => {
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date);
+};
+
 export const getTravels = async () => {
   try {
     let query = supabase.from('travels').select(`

@@ -94,7 +94,6 @@ export default function HomePage() {
     }
   };
 
-  // Auto-refresh intelligente
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (!document.hidden && !hasSearched) {

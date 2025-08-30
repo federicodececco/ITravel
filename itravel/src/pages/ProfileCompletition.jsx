@@ -84,8 +84,8 @@ export default function ProfileCompletition() {
       }
 
       const profileData = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         username: formData.username.toLowerCase(),
         avatar_url: avatarUrlRes,
       };
