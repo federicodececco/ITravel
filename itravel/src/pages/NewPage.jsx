@@ -142,7 +142,7 @@ export default function NewPage() {
   };
 
   return (
-    <section className='min-h-screen  bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]   md:pt-20 pb-24 md:pb-0 '>
+    <section className='min-h-screen  bg-[#1e1e1e] flex items-center justify-center p-4 font-[Playfair_Display]   md:pt-25 pb-24 md:pb-0 '>
       <div className=' w-full max-w-md sm:max-w-lg md:max-w-xl bg-[#e6d3b3] rounded-2xl p-4 sm:p-6 shadow-lg text-lg text-black bg-[url(/test-bg.jpeg)] relative'>
         {/* filtro colorato per cercare di fare un blend delle immagini di palceholder (scarsi risultati) */}
         <div className='absolute inset-0 bg-[#e6d3b3] opacity-40 mix-blend-multiply'></div>

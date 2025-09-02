@@ -73,7 +73,7 @@ export default function Login() {
               name='email'
               value={formData.email}
               onChange={handleChange}
-              className='w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-lg'
+              className='text-gray-600 w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-lg'
               placeholder='Inserisci la tua mail'
               disabled={isLoading}
             />
@@ -92,7 +92,7 @@ export default function Login() {
               name='password'
               value={formData.password}
               onChange={handleChange}
-              className='w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-lg'
+              className='text-gray-600 w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-gray-800 focus:outline-none text-lg'
               placeholder='Inserisci la tua password'
               disabled={isLoading}
             />

@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 const imageBucket = 'travel-images';
 const avatarBucket = 'avatar-images';
+
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const updateProfile = async (profileData, userId) => {
@@ -232,6 +232,16 @@ export const getPublicUrl = (path) => {
 };
 
 /* crud travels*/
+export const deleteTravelById = async (travelId) => {
+  try {
+    const response = await supabase.from('travels').delete().eq('id', travelId);
+    return response;
+  } catch (error) {
+    console.error('Errore cancellazione viaggio:', error);
+    throw error;
+  }
+};
+
 export const getTravelByUserId = async (userId) => {
   try {
     const { data, error } = await supabase
@@ -357,7 +367,6 @@ export const createTravel = async (travelData) => {
         );
       }
     }
-
     const orderedData = {
       title: travelData.title.trim(),
       description: travelData.description?.trim() || null,

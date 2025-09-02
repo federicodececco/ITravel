@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useBreakpoint } from '../hooks/useScreenSize';
-import { getTravelById, getPagesByTravelId, supabase } from '../lib/supabase';
+import {
+  getTravelById,
+  getPagesByTravelId,
+  supabase,
+  deleteTravelById,
+} from '../lib/supabase';
+import DeleteModal from '../components/DeleteModal';
 
 export default function TravelDetail() {
   const { travelId } = useParams();
@@ -12,6 +18,8 @@ export default function TravelDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [auth, setAuth] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadTravelData();
@@ -70,6 +78,26 @@ export default function TravelDetail() {
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('it-IT');
+  };
+
+  const handleDeleteTravel = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteTravelById(travelId);
+
+      navigate('/travel', {
+        state: {
+          message: 'Viaggio eliminato con successo',
+          type: 'success',
+        },
+      });
+    } catch (error) {
+      console.error('Errore eliminazione viaggio:', error);
+      setError("Errore durante l'eliminazione del viaggio");
+      setShowDeleteModal(false);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -134,7 +162,17 @@ export default function TravelDetail() {
           <i className='fa-solid fa-arrow-left'></i>
         </button>
 
-        {isMobile && (
+        {auth && (
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className='fixed top-4 right-16 bg-red-600/80 text-white p-3 rounded-full hover:bg-red-700 transition-all z-10'
+            title='Elimina viaggio'
+          >
+            <i className='fa-solid fa-trash'></i>
+          </button>
+        )}
+
+        {isMobile && auth && (
           <button
             onClick={() => navigate(`/add/${travelId}/new-page`)}
             className='fixed top-4 right-4 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 transition-all z-10'
@@ -271,6 +309,20 @@ export default function TravelDetail() {
           </div>
         )}
       </div>
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteTravel}
+        isLoading={isDeleting}
+        title='Elimina Viaggio'
+        itemName={travel?.title}
+        description='Verranno eliminate anche tutte le pagine e le immagini associate.'
+        warningText='Questa azione è irreversibile.'
+        confirmText='Elimina'
+        cancelText='Annulla'
+        loadingText='Eliminando...'
+        variant='danger'
+      />
     </div>
   );
 }
